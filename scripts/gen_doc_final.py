@@ -1,0 +1,471 @@
+﻿# -*- coding: utf-8 -*-
+import os
+DIR = os.path.dirname(os.path.abspath(__file__))
+OUT = os.path.join(DIR, '技术开发文档.md')
+
+content = r"""# AI 视频生成 Agent — 技术开发文档
+
+> 基于 Pavo AI 平台「爸爸的十块钱」视频项目分析，建立在 Agnes AI 统一模型网关（https://apihub.agnes-ai.com/v1）上的 AI 视频生成 Agent 系统
+> 文档版本：v2.0 | 日期：2026-07-12
+
+---
+
+## 目录
+
+1. [项目概述](#1-项目概述)
+2. [系统架构总览](#2-系统架构总览)
+3. [核心模块设计](#3-核心模块设计)
+4. [数据模型设计](#4-数据模型设计)
+5. [AI 提示词工程策略](#5-ai-提示词工程策略)
+6. [技术选型建议](#6-技术选型建议)
+7. [API 设计](#7-api-设计)
+8. [安全指引](#8-安全指引)
+9. [实施路线图](#9-实施路线图)
+
+---
+
+## 1. 项目概述
+
+### 1.1 目标
+
+构建一个 AI Agent 系统，能够根据用户输入的故事创意或一句话需求，自动生成完整视频项目，包含：
+
+- **角色设定**：外形、性格、服装、神态描述
+- **场景设定**：环境、灯光、氛围、时间
+- **锚点道具**：核心故事道具的设计
+- **完整分镜脚本**：逐镜头/逐幕的景别、运镜、画面、台词、时长
+- **视频生成**：通过 Agnes AI 视频模型（视频+音效同步生成）输出完整视频
+- **音效配乐**：嵌入视频生成流程中，由平台原生同步
+
+### 1.2 平台依赖
+
+本系统所有 AI 能力均通过 **Agnes AI 统一模型网关**（https://apihub.agnes-ai.com/v1）调用，以单一 API Key 覆盖文本生成、视频生成、音视频同步等全部能力。
+
+| 本系统需求 | 对应 Agnes AI 能力 |
+|-----------|------------------|
+| 故事理解与分镜生成 | 文本生成与推理（Claw 系列） |
+| 角色/场景/道具设定 | 文本生成 + 图像生成 |
+| 视频片段生成 | 视频与音视频同步生成 |
+| 配音与配乐 | 音视频同步生成（含音频输出） |
+| 参考图一致性 | 多模态理解与创作 |
+
+---
+
+## 2. 系统架构总览
+
+### 2.1 架构分层
+
+`
+┌─────────────────────────────────────────────────────────┐
+│                   前端交互层 (Next.js)                    │
+│     对话输入 | 实时预览 | 分镜编辑 | 提示词复制 | 导出     │
+└───────────────────────┬─────────────────────────────────┘
+                        │ HTTP / WebSocket
+┌───────────────────────▼─────────────────────────────────┐
+│                  Agent 编排引擎 (Python)                  │
+│   Planner Agent | Execute Agents | Reviewer | Fixer      │
+└───────────────────────┬─────────────────────────────────┘
+                        │ 内部函数调用
+┌───────────────────────▼─────────────────────────────────┐
+│                     核心工作流引擎                       │
+│  角色生成 → 场景生成 → 道具生成 → 分镜生成 → 视频渲染     │
+└───────────────────────┬─────────────────────────────────┘
+                        │
+┌───────────────────────▼─────────────────────────────────┐
+│              Agnes AI 统一模型网关                       │
+│   Base URL: https://apihub.agnes-ai.com/v1               │
+│  ┌──────────┬──────────┬────────────┬──────────────┐   │
+│  │ 文本模型  │ 图像模型  │ 视频模型    │ 多模态模型   │   │
+│  │(Claw系列)│          │(音视频同步) │(理解+创作)   │   │
+│  └──────────┴──────────┴────────────┴──────────────┘   │
+└─────────────────────────────────────────────────────────┘
+`
+
+### 2.2 核心设计原则
+
+1. **统一模型网关**：全部 AI 能力通过 Agnes AI 单一 API 调用
+2. **多 Agent 协作**：规划-执行-审核闭环工作模式
+3. **流式输出**：分镜生成过程对用户实时可见
+4. **一致性保障**：角色/道具外观跨镜头保持统一
+5. **渐进式渲染**：先出文本，再出预览，最后渲染视频
+
+---
+
+## 3. 核心模块设计
+
+### 3.1 创意输入层
+
+支持多种输入方式：
+- **一句话故事**：如"一个爸爸下班回家，儿子给他端洗脚水"
+- **结构化输入**：角色预定义 + 故事梗概
+- **参考视频/脚本**：通过 Agnes AI 多模态模型理解
+- **对话式迭代**：多轮对话打磨
+
+输入解析逻辑：
+`
+用户输入 → Agnes AI 文本模型(Claw)意图分类 → 提取关键元素 → 补充缺失信息 → 项目初始蓝图
+`
+
+### 3.2 Agent 编排引擎
+
+采用 **Plan → Execute → Review → Refine** 循环，所有 Agent 均通过 Agnes AI Claw 系列模型驱动。
+
+| Agent 角色 | 职责 |
+|-----------|------|
+| 规划 Agent (Planner) | 理解用户意图，拆解子任务 |
+| 角色 Agent (Character) | 生成/优化角色设定 |
+| 场景 Agent (Scene) | 生成/优化场景设定 |
+| 道具 Agent (Prop) | 生成/优化锚点道具 |
+| 分镜 Agent (Storyboard) | 逐幕/逐镜头生成分镜细节 |
+| 审核 Agent (Reviewer) | 一致性检查、质量评估 |
+| 视频 Agent (Video) | 调用 Agnes AI 视频模型同步生成视频+音效 |
+| 修复 Agent (Fixer) | 根据审核反馈自动修复 |
+
+工作流编排：
+`
+  Planner
+    ├── Character Agent ──┐
+    ├── Scene Agent ──────┤──► Review
+    └── Prop Agent ───────┘
+              │
+              ▼
+         Storyboard Agent ──► Review
+              │
+              ▼
+         Video Agent (Agnes AI 视频模型，音视频同步)
+              │
+              ▼ Done
+`
+
+### 3.3 角色设定模块
+
+`	ypescript
+interface CharacterSetting {
+  id: string;
+  name: string;
+  role: 'main' | 'supporting' | 'extra';
+  age: string;
+  gender: string;
+  appearance: {
+    build: string; face: string; eyes: string;
+    hair: string; clothing: string; distinctive: string;
+  };
+  personality: string[];
+  voice: string;
+  relationship: string;
+  consistencyKey: string;
+}
+`
+
+**一致性保障**：Character Reference Prompt 技术，每个角色提取 50-100 词外观锚点描述，后续所有镜头中自动作为 Prompt 前缀传入 Agnes AI 模型。
+
+### 3.4 场景设定模块
+
+`	ypescript
+interface SceneSetting {
+  id: string;
+  name: string;
+  timeOfDay: string;
+  environment: {
+    type: string; style: string; size: string;
+    furniture: string[]; decor: string[]; flooring: string;
+  };
+  lighting: { type: string; color: string; mood: string; };
+  atmosphere: string;
+  consistencyKey: string;
+}
+`
+
+### 3.5 道具设定模块
+
+`	ypescript
+interface PropSetting {
+  id: string;
+  name: string;
+  type: 'anchor' | 'prop';
+  appearance: string;
+  interaction: string;
+  scene: string;
+  characters: string[];
+  significance: string;
+}
+`
+
+### 3.6 分镜脚本模块（核心）
+
+`	ypescript
+interface Shot {
+  shotNumber: number;
+  shotType: string;       // "中景" | "近景" | "特写"
+  cameraMove: string;     // "固定" | "横移" | "缓慢推近"
+  cameraAngle: string;    // "平视" | "平视微俯"
+  description: string;    // 起幅→过程→落幅 完整描述
+  dialogue: string;
+  duration: string;
+  characters: string[];
+}
+
+interface Scene {
+  title: string;
+  duration: string;
+  mood: string;
+  music: string;       // BGM + SFX 文本描述（将传入视频模型同步生成）
+  keyframe: string;
+  shots: Shot[];
+}
+`
+
+**生成策略（迭代式）**：
+1. 输入角色+场景+道具 → 分析情感弧线
+2. 规划幕次结构（起承转合），分配各幕秒数
+3. 每幕细化镜头：景别/运镜/画面描述/台词/时长
+4. 分镜 Agent 同步输出该镜头的 BGM 和 SFX 文本描述
+5. 审核 Agent 检查：时长合理、镜头流畅、角色一致、情感完整
+
+**镜头语言规则库**：
+
+| 景别 | 用途 | 情感效果 |
+|------|------|---------|
+| 远景 | 建立环境 | 烘托氛围 |
+| 全景 | 角色+环境 | 关系建立 |
+| 中景 | 角色上半身 | 日常叙事 |
+| 近景 | 胸部以上 | 强调情绪 |
+| 特写 | 局部细节 | 放大情感 |
+
+| 运镜 | 感觉 | 用途 |
+|------|------|------|
+| 固定 | 安静沉浸 | 稳定叙事 |
+| 横移 | 带入流畅 | 跟随动作 |
+| 推近 | 深入内心 | 聚焦情绪 |
+| 拉远 | 收尾释放 | 疏离放下 |
+| 摇移 | 建立氛围 | 环境扫描 |
+
+### 3.7 视频生成模块
+
+**架构**：分镜文本（含音效描述）→ Prompt 工程化 → Agnes AI 视频模型（音视频同步）→ 完整视频输出
+
+**相比 v1.0 的核心改进**：视频生成与音效配乐合并为一次 API 调用，由 Agnes AI 视频模型原生支持音视频同步，无需后期手动合成。
+
+每条镜头构造如下 Prompt 传入 Agnes AI 视频模型：
+`
+CHARACTER: consistency_look
+SCENE: environment_description
+ACTION: shot_description
+CAMERA: shot_type, camera_move, camera_angle
+LIGHTING: lighting_description
+MOOD: atmosphere
+AUDIO: BGM + SFX 描述（模型同步生成音频）
+DIALOGUE: dialogue
+`
+
+**视频模型选择策略**：
+
+| 模型 | 策略 |
+|------|------|
+| Agnes AI 视频模型（首选） | 音视频同步生成，单一调用完成视频+配音+配乐 |
+| Seedance 2.0（备选） | 当需要特定风格时回退 |
+| Kling（备选） | 动态场景备选方案 |
+
+### 3.8 音效设计模块
+
+> 本模块不再对接独立音效生成 API，而是作为**设计输出层**，为视频模型提供高质量的音频描述。
+
+`	ypescript
+interface AudioDesign {
+  globalBGM: { instruments: string[]; tempo: string; mood: string; arc: string; };
+  sceneAudio: { sceneId: string; bgm: string; sfx: string[]; }[];
+}
+`
+
+**工作方式**：
+- 分镜 Agent 在生成每镜头时同步输出 BGM 和 SFX 文本描述
+- 这些描述作为 Prompt 的一部分传入 Agnes AI 视频模型
+- Agnes AI 视频模型在生成视频画面的同时同步生成音频轨道
+- 输出即为音画同步的完整视频文件
+
+---
+
+## 4. 数据模型设计
+
+`	ypescript
+interface Project {
+  id: string;
+  title: string;
+  status: 'draft' | 'generating' | 'completed';
+  createdAt: Date;
+  updatedAt: Date;
+  input: ProjectInput;
+  characters: CharacterSetting[];
+  scenes: SceneSetting[];
+  props: PropSetting[];
+  storyboard: Storyboard;
+  videos: VideoComposition[];
+  version: number;
+}
+
+interface ProjectContext {
+  projectId: string;
+  characters: CharacterSetting[];
+  scenes: SceneSetting[];
+  props: PropSetting[];
+  storyboard: Storyboard;
+  references: {
+    characterLooks: Record<string, string>;
+    sceneLooks: Record<string, string>;
+    propLooks: Record<string, string>;
+  };
+}
+`
+
+---
+
+## 5. AI 提示词工程策略
+
+### 分镜生成 System Prompt
+
+你是一个专业的影视分镜师和编剧。根据角色设定、场景设定和故事核心，生成视频分镜脚本。
+
+输出要求：
+1. 按幕次组织，每幕包含标题、总时长、关键帧画面、音效音乐
+2. 每个镜头包含：镜号、景别、运镜、起幅→过程→落幅、角度、台词、时长
+3. 画面描述必须具体到角色动作、表情、位置关系、光影变化
+4. 每幕必须包含 BGM 和 SFX 文本描述（传入视频模型同步生成音频）
+5. 总时长控制在 30-60 秒，遵循起承转合
+
+### 审核检查清单
+
+1. 角色外貌是否跨镜头一致？
+2. 道具/场景是否一致？
+3. 镜头间动作、位置关系是否连贯？
+4. 故事是否有完整起承转合？
+5. 景别/运镜标注是否准确？时长分配是否均衡？
+
+---
+
+## 6. 技术选型建议
+
+| 层级 | 选型 | 说明 |
+|------|------|------|
+| 前端 | Next.js 14 + React + TypeScript | SSR + 流式渲染 |
+| UI | Tailwind CSS + Shadcn/ui | 快速构建 Pavo 风格界面 |
+| 状态 | Zustand + React Query | 轻量可预测 |
+| 后端 | Python FastAPI | 异步高性能 |
+| Agent | LangGraph / CrewAI | 多 Agent 编排 |
+| LLM | **Agnes AI Claw 系列（首选）** | 统一网关，兼容 OpenAI 接口 |
+| 视频 | **Agnes AI 视频模型（首选）** | 支持音视频同步生成 |
+| 多模态 | **Agnes AI 多模态模型** | 参考图理解、一致性保持 |
+| 音效 | **由 Agnes AI 视频模型同步生成** | 无需独立音效服务 |
+| 数据库 | PostgreSQL + pgvector | 结构化 + 向量搜索 |
+| 缓存 | Redis | Agent 状态缓存 |
+| 存储 | S3 / MinIO | 视频/图片存储 |
+| 部署 | Docker + Kubernetes | 容器化 |
+
+> 通过 Agnes AI 统一模型网关，一个 API Key 覆盖全部能力，降低集成成本，统一错误处理和重试机制。
+
+---
+
+## 7. API 设计
+
+### 核心端点
+
+| Method | Path | 说明 |
+|--------|------|------|
+| POST | /api/projects | 创建项目 |
+| GET | /api/projects/{id} | 获取项目 |
+| PATCH | /api/projects/{id} | 更新项目 |
+| POST | /api/projects/{id}/regenerate | 重生成模块 |
+| POST | /api/projects/{id}/render | 渲染视频 |
+| GET | /api/projects/{id}/export | 导出 |
+| SSE | /api/projects/{id}/stream | 流式进度 |
+
+### Agnes AI 网关集成
+
+所有 AI 能力在内部实现中均通过 Agnes AI 统一模型网关完成。
+
+`python
+import openai
+
+client = openai.OpenAI(
+    base_url="https://apihub.agnes-ai.com/v1",
+    api_key="YOUR_AGNES_AI_API_KEY"
+)
+
+# 文本生成（分镜等）
+response = client.chat.completions.create(
+    model="agnes-claw",
+    messages=[...],
+    stream=True
+)
+`
+
+---
+
+## 8. 安全指引
+
+| 规则 | 说明 |
+|------|------|
+| 后端专用 | Agnes AI API Key 仅在后端使用，严禁暴露于前端或公开仓库 |
+| 环境变量 | 通过 .env 或密钥管理服务注入 |
+| 轮换机制 | 定期轮换 API Key，泄露时立即撤销 |
+| 请求代理 | 前端不直接调用网关，必须经后端代理 |
+| 用户数据 | 上传的参考图片仅用于当前项目，生成后按策略清理 |
+
+---
+
+## 9. 实施路线图
+
+### 阶段一：核心文本生成（2-3 周）
+- 搭建 Next.js + FastAPI 项目骨架
+- 实现 Multi-Agent 框架
+- 所有 Agent 通过 Agnes AI Claw 模型驱动
+- 前端 Chat Interface + 实时预览面板
+- 数据库设计与持久化
+- **里程碑**：输入故事 → 输出完整分镜文本
+
+### 阶段二：视频生成 + 音效同步（1.5 周）
+> 阶段二与三合并：Agnes AI 视频模型支持音视频同步生成
+- 接入 Agnes AI 视频模型，备用 Seedance / Kling
+- 分镜 → 视频 Prompt 转换器
+- 逐镜头视频生成和进度管理（含音频同步）
+- 视频片段拼接
+- **里程碑**：输入 → 输出完整视频（含音频）
+
+### 阶段三：产品化打磨（1-2 周）
+- 分镜时间轴可视化组件
+- 实时编辑与版本管理
+- Agent 输出质量迭代优化
+- 多格式导出（MP4 / JSON / Markdown）
+- 错误处理与降级策略
+- API Key 安全防护实施
+- **里程碑**：可发布的产品级系统
+
+### 总工期预估
+
+| 版本 | 预估工期 |
+|------|---------|
+| v1.0（原方案） | 6-8 周 |
+| **v2.0（本方案）** | **5-6.5 周** |
+
+> 工期缩短原因：Agnes AI 统一网关减少集成复杂度，音视频同步生成合并阶段二与三。
+
+---
+
+## 附录：关键设计决策
+
+| 决策 | 选择 | 理由 |
+|------|------|------|
+| AI 网关 | Agnes AI 统一网关 | 统一 API Key，音视频同步，降低集成复杂度 |
+| Agent 框架 | LangGraph | 灵活图编排，支持循环和条件分支 |
+| 分镜生成 | 迭代生成（先框架再逐幕细化） | 稳定性和质量更高 |
+| 视频模型 | Agnes AI 视频模型（首选）+ 备选 | 音视频同步为首选 |
+| 音效策略 | 由视频模型同步生成 | 无需独立阶段，减少合成环节 |
+| 一致性 | Prompt 约束（初期）+ IP-Adapter（后期） | 初期低成本，后期高效果 |
+
+---
+
+> 文档结束 v2.0
+"""
+
+with open(OUT, 'w', encoding='utf-8') as f:
+    f.write(content)
+print('ok')

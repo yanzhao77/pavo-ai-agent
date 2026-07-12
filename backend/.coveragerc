@@ -1,0 +1,15 @@
+[run]
+source = app
+omit =
+    app/db/migrations/*
+    app/__init__.py
+    */__init__.py
+
+[report]
+exclude_lines =
+    pragma: no cover
+    raise NotImplementedError
+    if __name__ == "__main__":
+    logger.error
+    logger.warning
+    pass
