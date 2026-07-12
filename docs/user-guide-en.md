@@ -233,6 +233,27 @@ The preview panel supports:
 
 ---
 
+
+---
+
+## 5. MCP Client Integration (v2.3 New)
+
+### 5.1 Available Tools (12)
+
+| Tool | Description |
+|------|-------------|
+| pavo_create_project | Create project & start pipeline |
+| pavo_get_project | Get project data |
+| pavo_list_projects | List projects |
+| pavo_generate_storyboard | Regenerate module |
+| pavo_save_memory | Save user preferences |
+| pavo_search_memory | Search memories |
+| pavo_list_memories | List all memories |
+| pavo_delete_memory | Delete memory |
+
+### 5.2 Workflow Visualization
+
+The pipeline graph shows 7 agents with color-coded status: green (completed), blue (running), red (failed). Click any node to see details. Timeline at bottom shows duration proportions.
 ## 6. FAQ
 
 ### Q: The storyboard is not detailed enough?

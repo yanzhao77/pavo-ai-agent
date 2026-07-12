@@ -235,6 +235,31 @@ POST /api/projects/{projectId}/regenerate
 
 ---
 
+
+---
+
+## 5. MCP 客户端集成（v2.3 新增）
+
+### 5.1 MCP Server 简介
+
+Pavo AI Agent v2.3 新增了 MCP Server 层，使 AI 编程工具可以直接调用 Pavo 的能力。
+
+### 5.2 可用工具（12 个）
+
+| 工具 | 说明 |
+|------|------|
+| pavo_create_project | 创建项目启动管线 |
+| pavo_get_project | 获取项目数据 |
+| pavo_list_projects | 获取项目列表 |
+| pavo_generate_storyboard | 重新生成模块 |
+| pavo_save_memory | 保存用户偏好 |
+| pavo_search_memory | 检索历史记忆 |
+| pavo_list_memories | 列出所有记忆 |
+| pavo_delete_memory | 删除指定记忆 |
+
+### 5.3 Workflow 可视化
+
+分镜生成时界面以 SVG 管线图展示 7 个 Agent 执行状态：绿色 ✓ 成功、蓝色 ◉ 执行中、红色 ✗ 失败。点击节点查看输入/输出/耗时详情。底部时间线展示各 Agent 耗时比例。
 ## 6. 常见问题
 
 ### Q: 生成的分镜不够详细怎么办？

@@ -421,6 +421,47 @@ docker compose up -d postgres redis minio
 uvicorn app.main:app --reload --port 8000
 ```
 
+
+
+## MCP Server Layer (v2.3 New)
+
+The MCP (Model Context Protocol) Server is the core architectural addition in v2.3. It exposes Pavo AI Agent capabilities through a standardized protocol for AI clients (Cursor, Claude Code, custom MCP Clients).
+
+### Module Structure
+
+`
+backend/mcp_server/
++-- main.py                    # Entry: 12 Tools, 5 Resources, 2 Prompts
++-- models/
+|   +-- mcp_schemas.py         # Unified MCPToolResult + MCPError codes
++-- memory/
+|   +-- store.py               # Memory storage (SQLAlchemy + pgvector)
+|   +-- embedding_client.py    # Embedding client (cache + batch + retry)
+|   +-- importance.py          # Importance scoring (3 sources)
++-- rag/
+|   +-- retriever.py           # RAG retrieval (vector search + reranker)
+|   +-- builder.py             # Knowledge base builder
++-- middleware/
+|   +-- memory_middleware.py   # Transparent memory injection
++-- tools/
+|   +-- memory_tools.py        # 4 Memory MCP Tools
++-- adapter/
+|   +-- project_adapter.py     # Bridge to existing ProjectService
+`
+
+### Memory System
+- **Short-term**: Session memory with sliding window TTL (30 min)
+- **Long-term**: PostgreSQL + pgvector (1536 dim), 6 memory types
+- **Importance scoring**: user_saved(0.9) / auto_extracted / feedback_derived
+- **4 Tools**: pavo_save/search/list/delete_memory
+
+### RAG Knowledge Base
+- **60+ entries** across 6 categories (shot language, film grammar, classic cases, narrative structure, genre templates, BGM)
+- **Retrieval**: Embedding → pgvector ANN → Multi-level Reranker → Context Injector
+- **Injection**: Storyboard Agent (primary) + Character/Scene Agent (secondary)
+
+### Workflow Visualization
+React component showing 7-agent pipeline as SVG flow graph with status indicators, detail panel, and timeline view.
 ### Frontend
 
 ```bash

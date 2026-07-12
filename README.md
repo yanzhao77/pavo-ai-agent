@@ -54,6 +54,7 @@
 <tr><td><a href="docs/user-guide-en.md">User Guide</a></td><td>Product usage workflow, interface guide, features, FAQ</td><td>English</td></tr>
 <tr><td><a href="docs/technical-documentation.md">详细技术文档</a></td><td>系统架构、代码详解、API 文档、部署指南</td><td>中文</td></tr>
 <tr><td><a href="docs/technical-documentation-en.md">Technical Documentation</a></td><td>Architecture, code walkthrough, API reference, deployment</td><td>English</td></tr>
+<tr><td><a href="docs/技术开发计划文档_v2.3.md">v2.3 开发计划</a></td><td>Memory + RAG 技术开发计划（审核通过）</td><td>中文</td></tr>
 </table>
 
 <hr>
