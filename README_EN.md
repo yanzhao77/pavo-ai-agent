@@ -36,7 +36,19 @@
 <tr><td><b>Drag &amp; Drop</b></td><td>Reorder shots with dnd-kit</td></tr>
 <tr><td><b>Auth</b></td><td>Simple token-based (no external dependency)</td></tr>
 </table>
+
+<h2>📖 Documentation</h2>
+
+<table>
+<tr><th>Document</th><th>Description</th><th>Language</th></tr>
+<tr><td><a href="docs/user-guide-en.md">User Guide</a></td><td>Product usage workflow, interface guide, features walkthrough, FAQ</td><td>English</td></tr>
+<tr><td><a href="docs/user-guide.md">用户操作指南</a></td><td>产品使用流程、界面导航、功能详解、常见问题</td><td>中文</td></tr>
+<tr><td><a href="docs/technical-documentation-en.md">Technical Documentation</a></td><td>System architecture, code walkthrough, API reference, deployment guide</td><td>English</td></tr>
+<tr><td><a href="docs/technical-documentation.md">详细技术文档</a></td><td>系统架构、代码详解、API 文档、部署指南</td><td>中文</td></tr>
+</table>
+
 <hr>
+
 <h2>Architecture</h2>
 <h3>System Overview</h3>
 <pre>
@@ -210,8 +222,12 @@ pavo-ai-work/
 │   ├── tailwind.config.js
 │   └── tsconfig.json
 │
-├── docs/                        # Documentation (Chinese)
-│   ├── 技术开发文档.md           #   Technical development guide
+├── docs/                        # Documentation
+│   ├── 技术开发文档.md           #   Technical development guide (Chinese)
+│   ├── user-guide-en.md         #   User Guide (English)
+│   ├── user-guide.md            #   User Guide (Chinese)
+│   ├── technical-documentation-en.md      #   Technical Documentation (English)
+│   └── technical-documentation.md         #   Technical Documentation (Chinese)
 │   ├── 技术开发计划文档_v5.md     #   Development plan
 │   ├── 技术委员会评审报告_v6_修正版.md
 │   └── (project reviews & reports)

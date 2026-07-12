@@ -46,6 +46,16 @@
 <tr><td><b>离线认证</b></td><td>简洁的 token 认证，无外部依赖</td></tr>
 </table>
 
+<h2>📖 文档</h2>
+
+<table>
+<tr><th>文档</th><th>说明</th><th>语言</th></tr>
+<tr><td><a href="docs/user-guide.md">用户操作指南</a></td><td>产品使用流程、界面导航、功能详解、常见问题</td><td>中文</td></tr>
+<tr><td><a href="docs/user-guide-en.md">User Guide</a></td><td>Product usage workflow, interface guide, features, FAQ</td><td>English</td></tr>
+<tr><td><a href="docs/technical-documentation.md">详细技术文档</a></td><td>系统架构、代码详解、API 文档、部署指南</td><td>中文</td></tr>
+<tr><td><a href="docs/technical-documentation-en.md">Technical Documentation</a></td><td>Architecture, code walkthrough, API reference, deployment</td><td>English</td></tr>
+</table>
+
 <hr>
 
 <h2>系统架构</h2>
@@ -183,10 +193,14 @@ pavo-ai-work/
 │   ├── tests/                   #   Playwright E2E 测试
 │   └── tailwind.config.js / tsconfig.json
 │
-├── docs/                        # 中文文档
+├── docs/                        # 中文文档 &amp; 用户手册
 │   ├── 技术开发文档.md
 │   ├── 技术开发计划文档_v5.md
-│   └── 技术委员会评审报告_v6_修正版.md
+│   ├── 技术委员会评审报告_v6_修正版.md
+│   ├── user-guide.md            #   用户操作指南
+│   ├── user-guide-en.md         #   User Guide (English)
+│   ├── technical-documentation.md           #   详细技术文档
+│   └── technical-documentation-en.md        #   Technical Documentation (English)
 │
 ├── scripts/                     # 工具脚本
 ├── .github/workflows/test.yml   # CI 流水线
