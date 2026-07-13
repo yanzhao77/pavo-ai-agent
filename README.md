@@ -8,6 +8,10 @@
 <p align="center"><b>把故事灵感变成专业视频分镜 — 零依赖、AI 原生、MCP 协议驱动</b></p>
 
 <p align="center">
+  <a href="docs/technical-architecture-report.md"><img src="https://img.shields.io/badge/架构报告-v2.3-8A2BE2?logo=readme" alt="架构报告"></a>
+</p>
+
+<p align="center">
   <a href="#"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python"></a>
   <a href="#"><img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite"></a>
   <a href="#"><img src="https://img.shields.io/badge/MCP-1.0-6C47FF?logo=protocol&logoColor=white" alt="MCP"></a>
@@ -36,6 +40,49 @@ pavo-mcp-server</code></pre>
 <td width="33%"><b>📡 MCP</b><br>Cursor / Claude Code / 任意 MCP 客户端</td>
 </tr>
 </table>
+
+<h2>🏗️ 系统架构</h2>
+
+<pre>
+┌──────────────┐  ┌──────────────┐  ┌──────────────┐
+│ Cursor/MCP   │  │ Claude Code  │  │  Web 浏览器   │
+│ (MCP Client) │  │ (MCP Client) │  │ (Next.js)    │
+└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
+       │                 │                 │
+       ▼                 ▼                 │
+┌──────────────────┐                      │
+│  MCP Server      │    ┌─────────────────┘
+│  · 12 Tools      │    │
+│  · 5 Resources   │    ▼
+│  · 2 Prompts     │  ┌──────────────┐
+└────────┬─────────┘  │  FastAPI     │
+         │            │  (port 18080)│
+         └─────┬──────┘              │
+               ▼                     │
+  ┌──────────────────────────────────┘
+  │
+  ▼
+┌────────────────────────────────────────┐
+│        ProjectService (核心编排)         │
+│  run_workflow() → 7 Agent 串行管线      │
+└────┬────┬────┬────┬────┬────┬────┬────┘
+     │    │    │    │    │    │    │
+     ▼    ▼    ▼    ▼    ▼    ▼    ▼
+┌────────────────────────────────────────┐
+│   Planner → Character → Scene → Prop  │
+│           → Storyboard → Reviewer     │
+│                     → Fixer           │
+└────────────────────────────────────────┘
+     │                        │
+     ▼                        ▼
+┌──────────┐     ┌──────────────────────┐
+│ Memory   │     │  RAG 知识库           │
+│ · 长期    │     │  · 60+ 影视知识条目   │
+│ · 会话    │     │  · 向量搜索+重排序    │
+└──────────┘     └──────────────────────┘
+
+📄 完整架构分析: <a href="docs/technical-architecture-report.md">技术架构报告</a>
+</pre>
 
 <h2>🆕 v2.3 核心特性</h2>
 
@@ -111,6 +158,7 @@ pavo-mcp-server</code></pre>
 <tr><td><a href="docs/technical-documentation-en.md">📙 Technical Docs</a></td><td>Architecture, code walkthrough, API reference</td><td>English</td></tr>
 <tr><td><a href="docs/技术债务解决方案报告.md">📋 技术债务报告</a></td><td>零依赖改造分析与剩余债务解决方案</td><td>中文</td></tr>
 <tr><td><a href="FINAL_REPORT.md">📋 FINAL REPORT</a></td><td>Zero-dependency refactoring completion report</td><td>English</td></tr>
+<tr><td><a href="docs/technical-architecture-report.md">🏗️ 技术架构报告</a></td><td>完整系统架构分析、组件详解、数据流、技术选型</td><td>中文</td></tr>
 </table>
 
 <h2>🧠 Agent 管线</h2>
@@ -120,7 +168,20 @@ pavo-mcp-server</code></pre>
                   ↑                        ↑
             Memory 注入               RAG 知识注入</pre>
 
-<p>7 个 Agent 协作完成从故事到分镜的完整转化。v2.3 新增 Memory + RAG 注入层，让分镜更懂用户的偏好、更符合专业标准。</p>
+<p>7 个 Agent 协作完成从故事到分镜的完整转化，串行执行。</p>
+
+<table>
+<tr><th>#</th><th>Agent</th><th>输入</th><th>输出</th></tr>
+<tr><td>1</td><td><b>Planner</b> 规划师</td><td>用户故事</td><td>角色、场景、主题、情感、时长分析</td></tr>
+<tr><td>2</td><td><b>Character</b> 角色</td><td>故事文本</td><td>角色设定（姓名、年龄、外貌、性格、声音、一致性 Key）</td></tr>
+<tr><td>3</td><td><b>Scene</b> 场景</td><td>故事 + 角色</td><td>场景设置（环境、灯光、氛围）</td></tr>
+<tr><td>4</td><td><b>Prop</b> 道具</td><td>故事 + 角色 + 场景</td><td>道具列表（外观、交互、意义）</td></tr>
+<tr><td>5</td><td><b>Storyboard</b> 分镜</td><td>故事 + 角色 + 场景 + 道具</td><td>逐镜分镜表（景别、运镜、角度、对白、BGM）</td></tr>
+<tr><td>6</td><td><b>Reviewer</b> 审查</td><td>完整项目</td><td>质量审查报告（是否需要修复）</td></tr>
+<tr><td>7</td><td><b>Fixer</b> 修复</td><td>审查报告</td><td>修复后的分镜</td></tr>
+</table>
+
+<p>v2.3 新增 Memory + RAG 注入层：Memory 在 <b>Planner</b> 阶段注入用户历史偏好，RAG 在 <b>Storyboard</b> 阶段注入影视专业知识，让分镜更懂用户、更专业。</p>
 
 <h2>♻️ 零依赖架构</h2>
 
