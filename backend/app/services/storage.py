@@ -1,73 +1,66 @@
+"""Local file storage — replaces MinIO/S3 (boto3).
+
+Public interface is intentionally kept compatible with the old StorageClient:
+  upload_bytes(data, object_name, content_type) -> str
+  get_url(object_name) -> str
+  delete(object_name) -> bool
+  mount_static(app)          — mount FastAPI StaticFiles
+
+Files are stored under ~/.pavo/storage/ (or $PAVO_HOME/storage/).
+The static server exposes them at /static/<object_name>.
+"""
 import logging
-import boto3
-from botocore.exceptions import ClientError
-from app.config import settings
+import os
+from pathlib import Path
+
+from fastapi.staticfiles import StaticFiles
 
 logger = logging.getLogger(__name__)
 
+# ── Storage root ──────────────────────────────────────────────────────────────
+_env_home = os.environ.get("PAVO_HOME", "")
+_PAVO_HOME = Path(_env_home) if _env_home else Path.home() / ".pavo"
+STORAGE_DIR = _PAVO_HOME / "storage"
+STORAGE_DIR.mkdir(parents=True, exist_ok=True)
+
+_STATIC_PORT = int(os.environ.get("PAVO_STATIC_PORT", "18080"))
+
 
 class StorageClient:
-    """MinIO/S3 storage client for video files. Lazy initialization."""
+    """Local filesystem storage client — drop-in replacement for MinIO."""
 
-    def __init__(self, lazy=True):
-        self.endpoint_url = settings.minio_endpoint
-        self.bucket = settings.minio_bucket
-        self._client = None
-        self._lazy = lazy
-        if not lazy:
-            self._get_client()
+    def __init__(self, base_dir: str = ""):
+        self.base_dir = Path(base_dir) if base_dir else STORAGE_DIR
+        self.base_dir.mkdir(parents=True, exist_ok=True)
 
-    def _get_client(self):
-        if self._client is None:
-            self._client = boto3.client(
-                "s3",
-                endpoint_url=self.endpoint_url,
-                aws_access_key_id=settings.minio_access_key,
-                aws_secret_access_key=settings.minio_secret_key,
-            )
-        return self._client
-
-    def _ensure_bucket(self):
-        try:
-            client = self._get_client()
-            try:
-                client.head_bucket(Bucket=self.bucket)
-            except ClientError:
-                client.create_bucket(Bucket=self.bucket)
-                logger.info(f"Created bucket: {self.bucket}")
-        except Exception as e:
-            logger.warning(f"Cannot access bucket {self.bucket}: {e}")
-
-    def upload_bytes(self, data: bytes, object_name: str, content_type: str = "video/mp4") -> str:
-        try:
-            client = self._get_client()
-            self._ensure_bucket()
-            client.put_object(
-                Bucket=self.bucket, Key=object_name,
-                Body=data, ContentType=content_type,
-            )
-            url = f"{self.endpoint_url}/{self.bucket}/{object_name}"
-            logger.info(f"Uploaded {object_name}")
-            return url
-        except ClientError as e:
-            logger.error(f"Upload failed: {e}")
-            return ""
+    def upload_bytes(self, data: bytes, object_name: str,
+                     content_type: str = "video/mp4") -> str:
+        fp = self.base_dir / object_name
+        fp.parent.mkdir(parents=True, exist_ok=True)
+        with open(fp, "wb") as f:
+            f.write(data)
+        logger.info(f"Saved {len(data)} bytes to {fp}")
+        return self.get_url(object_name)
 
     def get_url(self, object_name: str) -> str:
-        return f"{self.endpoint_url}/{self.bucket}/{object_name}"
+        return f"http://localhost:{_STATIC_PORT}/static/{object_name}"
 
     def delete(self, object_name: str) -> bool:
-        try:
-            client = self._get_client()
-            client.delete_object(Bucket=self.bucket, Key=object_name)
+        fp = self.base_dir / object_name
+        if fp.exists():
+            fp.unlink()
+            logger.info(f"Deleted {fp}")
             return True
-        except ClientError as e:
-            logger.error(f"Delete failed: {e}")
-            return False
+        return False
+
+    def mount_static(self, app) -> None:
+        if self.base_dir.exists():
+            app.mount("/static", StaticFiles(directory=str(self.base_dir)), name="static")
+            logger.info(f"Static files served from {self.base_dir} at /static")
 
 
-# Lazy singleton - only created when first used
-_storage: StorageClient = None
+_storage: StorageClient | None = None
+
 
 def get_storage() -> StorageClient:
     global _storage

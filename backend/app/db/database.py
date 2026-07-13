@@ -2,16 +2,33 @@
 import os, logging
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Float
+from sqlalchemy import Column, String, Text, DateTime, JSON, Integer, Float, event
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase
 
 logger = logging.getLogger(__name__)
-PAVO_HOME = Path.home() / ".pavo"
+
+_env_home = os.environ.get("PAVO_HOME", "")
+PAVO_HOME = Path(_env_home) if _env_home else Path.home() / ".pavo"
 PAVO_HOME.mkdir(parents=True, exist_ok=True)
 DB_PATH = PAVO_HOME / "pavo.db"
 DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
 engine = create_async_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+
+
+@event.listens_for(engine.sync_engine, "connect")
+def _load_sqlite_vec(dbapi_conn, _connection_record):
+    """Load sqlite-vec extension on every new connection."""
+    try:
+        import sqlite_vec
+        dbapi_conn.enable_load_extension(True)
+        sqlite_vec.load(dbapi_conn)
+        dbapi_conn.enable_load_extension(False)
+        logger.debug("sqlite-vec loaded successfully")
+    except Exception as e:
+        logger.warning(f"sqlite-vec not available, vector search disabled: {e}")
+
+
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
 class Base(DeclarativeBase):

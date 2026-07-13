@@ -1,4 +1,4 @@
-"""Memory store implementation with SQLAlchemy + pgvector compatibility."""
+"""Memory store implementation with SQLAlchemy + SQLite."""
 
 import uuid
 import json
@@ -7,7 +7,6 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from sqlalchemy import Column, String, Text, DateTime, JSON, Float, Integer, Index, and_
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, delete, func
 
@@ -25,7 +24,7 @@ class UserMemoryORM(Base):
     """User long-term memory ORM model."""
     __tablename__ = "user_memories"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
     user_id = Column(String(64), nullable=False, index=True)
     memory_type = Column(String(32), nullable=False)  # style/character/scene/preference/story_arc/feedback
     content = Column(JSON, default=dict)
@@ -47,7 +46,7 @@ class KnowledgeBaseORM(Base):
     """Knowledge base ORM model."""
     __tablename__ = "knowledge_base"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    id = Column(String(64), primary_key=True, default=lambda: str(uuid.uuid4()))
     category = Column(String(64), nullable=False, index=True)
     title = Column(String(255), nullable=False)
     content = Column(Text, default="")
@@ -86,9 +85,7 @@ class MemoryStore(MemoryProvider):
         self.embedding_client = get_embedding_client()
 
     async def save_memory(self, memory: dict) -> dict:
-        mem_id = memory.get("id", uuid.uuid4())
-        if isinstance(mem_id, str):
-            mem_id = uuid.UUID(mem_id)
+        mem_id = str(memory.get("id", uuid.uuid4()))
 
         content = memory.get("content", {})
         importance = memory.get("importance", 0.5)
@@ -103,7 +100,7 @@ class MemoryStore(MemoryProvider):
                 logger.warning(f"Embedding generation failed: {e}")
 
         orm = UserMemoryORM(
-            id=mem_id,
+            id=str(mem_id),
             user_id=memory.get("user_id", ""),
             memory_type=memory.get("memory_type", "preference"),
             content=content,
@@ -170,9 +167,8 @@ class MemoryStore(MemoryProvider):
 
     async def delete_memory(self, user_id: str, memory_id: str) -> bool:
         try:
-            mem_uuid = uuid.UUID(memory_id) if isinstance(memory_id, str) else memory_id
             stmt = delete(UserMemoryORM).where(
-                and_(UserMemoryORM.id == mem_uuid, UserMemoryORM.user_id == user_id)
+                and_(UserMemoryORM.id == str(memory_id), UserMemoryORM.user_id == user_id)
             )
             result = await self.session.execute(stmt)
             await self.session.commit()
@@ -288,7 +284,7 @@ class MemoryStore(MemoryProvider):
 
     async def _update_accessed(self, memory_id: str) -> None:
         try:
-            stmt = select(UserMemoryORM).where(UserMemoryORM.id == uuid.UUID(memory_id))
+            stmt = select(UserMemoryORM).where(UserMemoryORM.id == str(memory_id))
             result = await self.session.execute(stmt)
             row = result.scalar_one_or_none()
             if row:
