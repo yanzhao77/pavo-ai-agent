@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 SCENE_PROMPT = """You are a scene designer. Based on the story and characters, create scene settings.
 Provide: name, timeOfDay, environment (type, style, size, furniture, decor, flooring), lighting (type, color, mood), atmosphere, consistencyKey.

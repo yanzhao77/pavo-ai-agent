@@ -1,4 +1,4 @@
-﻿"""Project adapter — bridges MCP Server to existing ProjectService."""
+"""Project adapter — bridges MCP Server to existing ProjectService."""
 import uuid, logging
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select

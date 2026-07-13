@@ -1,4 +1,4 @@
-﻿import json
+import json
 import asyncio
 import uuid
 from fastapi import APIRouter, Depends, HTTPException

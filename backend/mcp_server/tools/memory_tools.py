@@ -1,4 +1,4 @@
-﻿"""Memory MCP Tools — save/search/list/delete memory."""
+"""Memory MCP Tools — save/search/list/delete memory."""
 import uuid, logging
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession

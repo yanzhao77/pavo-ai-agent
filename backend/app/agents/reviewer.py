@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 PROMPT = """You are a quality reviewer for storyboard scripts. Check for:
 1. Character appearance consistency across all shots

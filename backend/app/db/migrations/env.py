@@ -1,4 +1,4 @@
-﻿"""Alembic migration environment — async-compatible with aiosqlite.
+"""Alembic migration environment — async-compatible with aiosqlite.
 
 Uses SQLAlchemy's run_sync() pattern so that Alembic (which is synchronous)
 can operate on the same aiosqlite engine used by the application.

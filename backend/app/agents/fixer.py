@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 PROMPT = "You are a fixer agent. Given review feedback and the original storyboard, fix the identified issues. Return the corrected storyboard in the same JSON format."
 

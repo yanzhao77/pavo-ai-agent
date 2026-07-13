@@ -1,4 +1,4 @@
-﻿import json
+import json
 import logging
 from app.services.agnes_client import agnes_client
 

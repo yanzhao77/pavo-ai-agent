@@ -1,4 +1,4 @@
-﻿"""RAG retriever — vector search + multi-level reranking for knowledge base."""
+"""RAG retriever — vector search + multi-level reranking for knowledge base."""
 import time, logging, json, uuid
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession

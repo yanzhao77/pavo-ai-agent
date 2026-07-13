@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 CHARACTER_PROMPT = """You are a character designer. Based on the story input, create character settings.
 For each character provide: name, role (main/supporting), age, gender, appearance (build, face, eyes, hair, clothing, distinctive), personality (list), voice, relationship, consistencyKey (a short English description for T2V model).

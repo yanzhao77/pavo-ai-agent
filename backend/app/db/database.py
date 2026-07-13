@@ -12,21 +12,56 @@ _env_home = os.environ.get("PAVO_HOME", "")
 PAVO_HOME = Path(_env_home) if _env_home else Path.home() / ".pavo"
 PAVO_HOME.mkdir(parents=True, exist_ok=True)
 DB_PATH = PAVO_HOME / "pavo.db"
-DATABASE_URL = f"sqlite+aiosqlite:///{DB_PATH}"
-engine = create_async_engine(DATABASE_URL, echo=False, connect_args={"check_same_thread": False})
+
+# Allow DATABASE_URL env override (used in tests and CI)
+DATABASE_URL = os.environ.get("DATABASE_URL") or f"sqlite+aiosqlite:///{DB_PATH}"
+
+# aiosqlite in-memory databases require same-connection semantics
+_connect_args: dict = {}
+if ":memory:" not in DATABASE_URL:
+    _connect_args["check_same_thread"] = False
+
+engine = create_async_engine(DATABASE_URL, echo=False, connect_args=_connect_args)
 
 
 @event.listens_for(engine.sync_engine, "connect")
 def _load_sqlite_vec(dbapi_conn, _connection_record):
-    """Load sqlite-vec extension on every new connection."""
+    """Load sqlite-vec extension on every new aiosqlite connection.
+
+    aiosqlite wraps sqlite3 in a worker thread.  The 'connect' event fires
+    on the *calling* thread (the asyncio event-loop thread), so we push a
+    callable into aiosqlite's internal thread-queue (_tx) so it executes in
+    the correct worker thread.
+
+    IMPORTANT: we use fire-and-forget (no done.wait()) to avoid a deadlock
+    that occurs when the event-loop thread blocks on done.wait() while the
+    aiosqlite worker thread is itself waiting for the event loop to drain
+    its queue.  Loading failures are only logged as warnings.
+    """
     try:
         import sqlite_vec
-        dbapi_conn.enable_load_extension(True)
-        sqlite_vec.load(dbapi_conn)
-        dbapi_conn.enable_load_extension(False)
-        logger.debug("sqlite-vec loaded successfully")
+        aiosqlite_conn = getattr(dbapi_conn, "_connection", None)
+        if aiosqlite_conn is None:
+            logger.warning("sqlite-vec: cannot find aiosqlite connection object")
+            return
+
+        def _do_load():
+            try:
+                raw = aiosqlite_conn._conn  # real sqlite3.Connection
+                raw.enable_load_extension(True)
+                sqlite_vec.load(raw)
+                raw.enable_load_extension(False)
+                logger.debug("sqlite-vec loaded successfully")
+            except Exception as exc:
+                logger.warning(f"sqlite-vec not available, vector search disabled: {exc}")
+
+        # Fire-and-forget: push into aiosqlite's worker-thread queue without
+        # blocking the calling thread.  The extension will be ready before any
+        # SQL that uses vec0 virtual tables is executed (because all SQL also
+        # goes through the same worker-thread queue, which is FIFO).
+        aiosqlite_conn._tx.put_nowait((None, _do_load))
     except Exception as e:
-        logger.warning(f"sqlite-vec not available, vector search disabled: {e}")
+        logger.warning(f"sqlite-vec load hook failed: {e}")
 
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)

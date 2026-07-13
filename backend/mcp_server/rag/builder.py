@@ -1,4 +1,4 @@
-﻿"""RAG builder — knowledge base construction pipeline."""
+"""RAG builder — knowledge base construction pipeline."""
 import logging, os, glob
 from sqlalchemy.ext.asyncio import AsyncSession
 from .interfaces import RAGProvider

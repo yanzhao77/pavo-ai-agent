@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 PROMPT = "You are a prop designer. Create anchor props for the story. For each prop provide: name, type (anchor/prop), appearance, interaction, scene, characters, significance. Return a JSON array."
 

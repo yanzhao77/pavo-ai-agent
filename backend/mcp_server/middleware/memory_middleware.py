@@ -1,4 +1,4 @@
-﻿"""Memory Middleware — transparent memory context injection for MCP Tools."""
+"""Memory Middleware — transparent memory context injection for MCP Tools."""
 import logging, time
 from typing import Optional
 from ..models.mcp_schemas import MCPToolResult

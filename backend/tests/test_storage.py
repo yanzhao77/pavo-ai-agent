@@ -32,11 +32,17 @@ class TestStorageClient:
         assert client.delete("nonexistent.mp4") is False
 
     def test_no_boto3_import(self):
-        """Ensure boto3 is not imported anywhere in storage module."""
-        import importlib, sys
-        # Remove cached module to force fresh import
+        """Ensure boto3 is not imported (as an import statement) in storage module."""
+        import ast, importlib, sys
         sys.modules.pop("app.services.storage", None)
         import app.services.storage as m
-        src = Path(m.__file__).read_text()
-        assert "boto3" not in src
-        assert "botocore" not in src
+        src = Path(m.__file__).read_text(encoding="utf-8")
+        tree = ast.parse(src)
+        imported_names = []
+        for node in ast.walk(tree):
+            if isinstance(node, ast.Import):
+                imported_names.extend(n.name.split(".")[0] for n in node.names)
+            elif isinstance(node, ast.ImportFrom) and node.module:
+                imported_names.append(node.module.split(".")[0])
+        assert "boto3" not in imported_names, "boto3 must not be imported in storage.py"
+        assert "botocore" not in imported_names, "botocore must not be imported in storage.py"

@@ -1,4 +1,4 @@
-﻿from app.agents.base import BaseAgent
+from app.agents.base import BaseAgent
 
 class PlannerAgent(BaseAgent):
     def __init__(self):

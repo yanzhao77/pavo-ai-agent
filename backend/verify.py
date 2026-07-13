@@ -1,4 +1,4 @@
-﻿# verify imports
+# verify imports
 from app.config import settings
 print("config OK:", settings.app_name)
 

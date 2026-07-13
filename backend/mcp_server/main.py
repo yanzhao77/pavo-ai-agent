@@ -1,4 +1,4 @@
-﻿"""Pavo MCP Server entry point — tools, resources, prompts registration."""
+"""Pavo MCP Server entry point — tools, resources, prompts registration."""
 import asyncio
 import json
 import logging
