@@ -47,6 +47,12 @@ async def list_prompts():
 async def call_tool(name: str, arguments: dict):
     from .models.mcp_schemas import MCPToolResult
     from .middleware.memory_middleware import MemoryMiddleware
+from .tools.guards import check_api_key
+    # Security: check API Key first
+    err = check_api_key()
+    if err:
+        return err
+
     middleware = MemoryMiddleware()
     try:
         augmented_args = await middleware.pre_process(name, arguments)

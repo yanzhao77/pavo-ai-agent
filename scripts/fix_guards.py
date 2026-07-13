@@ -1,4 +1,7 @@
-"""Unified security guards for MCP Tools."""
+﻿import os, ast
+
+# Phase 0: Fix guards.py encoding
+guards_content = r'''"""Unified security guards for MCP Tools."""
 import os, logging
 from ..models.mcp_schemas import MCPToolResult
 logger = logging.getLogger(__name__)
@@ -14,3 +17,9 @@ def require_env(var_name: str, label: str = "") -> str | None:
     if not val:
         return f"{label or var_name} \u672a\u914d\u7f6e"
     return None
+'''
+
+with open("backend/mcp_server/tools/guards.py", "w", encoding="utf-8") as f:
+    f.write(guards_content)
+ast.parse(guards_content)
+print("Phase 0: guards.py encoding fixed")

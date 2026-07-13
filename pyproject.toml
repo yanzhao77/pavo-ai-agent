@@ -1,0 +1,18 @@
+﻿[build-system]
+requires = [\"setuptools>=64\"]
+build-backend = \"setuptools.backends._legacy:_Backend\"
+
+[project]
+name = \"pavo-ai-agent\"
+version = \"2.3.0\"
+description = \"AI-powered video storyboard generation with MCP protocol\"
+requires-python = \">=3.10\"
+dependencies = []
+
+[project.scripts]
+pavo-mcp-server = \"mcp_server.main:main\"
+pavo-start = \"app.main:start_app\"
+
+[tool.setuptools]
+packages = [\"app\", \"app.db\", \"mcp_server\"]
+package-dir = {\"\" = \"backend\"}
