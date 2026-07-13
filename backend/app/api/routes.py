@@ -55,7 +55,7 @@ async def create_project(req: CreateProjectRequest, session: AsyncSession = Depe
     return {"projectId": str(project.id), "status": project.status.value}
 
 @router.get("/projects/{project_id}")
-async def get_project(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def get_project(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -91,7 +91,7 @@ async def list_projects(user_id: str = "", session: AsyncSession = Depends(get_s
     ]
 
 @router.get("/projects/{project_id}/stream")
-async def stream_project(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def stream_project(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -114,7 +114,7 @@ async def stream_project(project_id: uuid.UUID, session: AsyncSession = Depends(
     return StreamingResponse(event_stream(), media_type="text/event-stream")
 
 @router.patch("/projects/{project_id}")
-async def update_project(project_id: uuid.UUID, body: dict, session: AsyncSession = Depends(get_session)):
+async def update_project(project_id: str, body: dict, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -126,7 +126,7 @@ async def update_project(project_id: uuid.UUID, body: dict, session: AsyncSessio
     return {"status": "updated"}
 
 @router.post("/projects/{project_id}/regenerate")
-async def regenerate(project_id: uuid.UUID, req: RegenerateRequest, session: AsyncSession = Depends(get_session)):
+async def regenerate(project_id: str, req: RegenerateRequest, session: AsyncSession = Depends(get_session)):
     service = ProjectService(session)
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
@@ -146,7 +146,7 @@ async def regenerate(project_id: uuid.UUID, req: RegenerateRequest, session: Asy
     return {"status": "regenerated", "module": module}
 
 @router.post("/projects/{project_id}/render")
-async def render_project(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def render_project(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -162,7 +162,7 @@ from app.models.project import VersionHistory, Feedback
 from app.services.storage import get_storage
 
 @router.get("/projects/{project_id}/tasks")
-async def get_task_status(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def get_task_status(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -171,7 +171,7 @@ async def get_task_status(project_id: uuid.UUID, session: AsyncSession = Depends
     return {"task_ids": task_ids, "video_count": len(project.videos or [])}
 
 @router.post("/projects/{project_id}/versions")
-async def create_version(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def create_version(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -196,7 +196,7 @@ async def create_version(project_id: uuid.UUID, session: AsyncSession = Depends(
     return {"version_id": str(version.id), "version_number": ver_num}
 
 @router.get("/projects/{project_id}/versions")
-async def list_versions(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def list_versions(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(
         select(VersionHistory).where(VersionHistory.project_id == project_id)
         .order_by(VersionHistory.version_number.desc())
@@ -208,7 +208,7 @@ async def list_versions(project_id: uuid.UUID, session: AsyncSession = Depends(g
             for v in versions]
 
 @router.post("/projects/{project_id}/versions/{version_id}/restore")
-async def restore_version(project_id: uuid.UUID, version_id: uuid.UUID,
+async def restore_version(project_id: str, version_id: str,
                           session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(VersionHistory).where(
         VersionHistory.id == version_id, VersionHistory.project_id == project_id))
@@ -226,7 +226,7 @@ async def restore_version(project_id: uuid.UUID, version_id: uuid.UUID,
     return {"status": "restored", "version_number": version.version_number}
 
 @router.post("/projects/{project_id}/feedback")
-async def submit_feedback(project_id: uuid.UUID, body: dict,
+async def submit_feedback(project_id: str, body: dict,
                          session: AsyncSession = Depends(get_session)):
     fb = Feedback(
         id=uuid.uuid4(), project_id=project_id,
@@ -239,7 +239,7 @@ async def submit_feedback(project_id: uuid.UUID, body: dict,
     return {"status": "submitted", "id": str(fb.id)}
 
 @router.get("/projects/{project_id}/videos")
-async def get_video_details(project_id: uuid.UUID,
+async def get_video_details(project_id: str,
                            session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
@@ -249,14 +249,14 @@ async def get_video_details(project_id: uuid.UUID,
     for v in videos:
         if v.get("result") and v["result"].get("url"):
             storage = get_storage()
-            object_name = f"projects/{project_id}/shots/{v.get(chr(115)+chr(104)+chr(111)+chr(116)+chr(95)+chr(110)+chr(117)+chr(109)+chr(98)+chr(101)+chr(114), 0)}.mp4"
+            object_name = f"projects/{project_id}/shots/{v.get("shot_number", 0)}.mp4"
             v["storage_url"] = storage.get_url(object_name)
     return {"videos": videos}
 
 
 
 @router.delete("/projects/{project_id}")
-async def delete_project(project_id: uuid.UUID, session: AsyncSession = Depends(get_session)):
+async def delete_project(project_id: str, session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()
     if not project:
@@ -266,7 +266,7 @@ async def delete_project(project_id: uuid.UUID, session: AsyncSession = Depends(
     return {"status": "deleted"}
 
 @router.get("/projects/{project_id}/export")
-async def export_project(project_id: uuid.UUID, format: str = "markdown",
+async def export_project(project_id: str, format: str = "markdown",
                          session: AsyncSession = Depends(get_session)):
     result = await session.execute(select(Project).where(Project.id == project_id))
     project = result.scalar_one_or_none()

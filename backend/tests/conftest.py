@@ -6,12 +6,6 @@ os.environ["AGNES_API_KEY"] = "test-key-12345"
 os.environ["APP_ENV"] = "test"
 os.environ["LOG_LEVEL"] = "CRITICAL"
 os.environ["DATABASE_URL"] = "sqlite+aiosqlite:///:memory:"
-os.environ["REDIS_URL"] = "redis://localhost:6379/0"
-os.environ["MINIO_ENDPOINT"] = "http://localhost:9000"
-os.environ["MINIO_ACCESS_KEY"] = "minioadmin"
-os.environ["MINIO_SECRET_KEY"] = "minioadmin"
-os.environ["MINIO_BUCKET"] = "pavo-videos"
-
 
 
 @pytest.fixture
