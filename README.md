@@ -1,213 +1,394 @@
-﻿<p align="center">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://img.shields.io/badge/Pavo_AI_Agent-1B1B2F?style=for-the-badge&logo=data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48Y2lyY2xlIGN4PSIyMCIgY3k9IjIwIiByPSIyMCIgZmlsbD0iI0E4QjNGRiIvPjxwYXRoIGQ9Ik0xMiAyMGwxNiAweiIgc3Ryb2tlPSIjMjIyIiBzdHJva2Utd2lkdGg9IjIiLz48cGF0aCBkPSJNMTggMTJsMCAxNiIgc3Ryb2tlPSIjMjIyIiBzdHJva2Utd2lkdGg9IjIiLz48L3N2Zz4="/>
-    <img src="https://img.shields.io/badge/Pavo_AI_Agent-1B1B2F?style=for-the-badge&logo=openai&logoColor=white" alt="Pavo AI Agent" width="220">
-  </picture>
-</p>
+<div align="center">
 
-<p align="center"><b>把故事灵感变成专业视频分镜 — 零依赖、AI 原生、MCP 协议驱动</b></p>
+<img src="https://raw.githubusercontent.com/yanzhao77/pavo-ai-agent/master/frontend/public/logo.png" width="120" alt="Pavo Logo" />
 
-<p align="center">
-  <a href="docs/technical-architecture-report.md"><img src="https://img.shields.io/badge/架构报告-v2.3-8A2BE2?logo=readme" alt="架构报告"></a>
-</p>
+# Pavo AI Agent
 
-<p align="center">
-  <a href="#"><img src="https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white" alt="Python"></a>
-  <a href="#"><img src="https://img.shields.io/badge/SQLite-003B57?logo=sqlite&logoColor=white" alt="SQLite"></a>
-  <a href="#"><img src="https://img.shields.io/badge/MCP-1.0-6C47FF?logo=protocol&logoColor=white" alt="MCP"></a>
-  <a href="#"><img src="https://img.shields.io/badge/Zero_Dep-✓_No_Docker-10B981" alt="Zero Dep"></a>
-  <a href="README_EN.md"><img src="https://img.shields.io/badge/EN-Readme-0A66C2?logo=readme" alt="English"></a>
-</p>
+**专为影视创作者打造的 AI 视频分镜生成引擎**
 
-<hr>
+*输入一段故事 → 7 个 AI 智能体协同工作 → 输出专业级逐镜分镜脚本*
 
-<h2 align="center">✨ 两条命令，即刻启动</h2>
+<br/>
 
-<pre align="center"><code>pip install .
-pavo-mcp-server</code></pre>
+[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white)](https://python.org)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
+[![MCP](https://img.shields.io/badge/MCP-Protocol-8B5CF6?logo=anthropic&logoColor=white)](https://modelcontextprotocol.io)
+[![Next.js](https://img.shields.io/badge/Next.js-14-000000?logo=nextdotjs&logoColor=white)](https://nextjs.org)
+[![SQLite](https://img.shields.io/badge/SQLite-Zero_Dep-003B57?logo=sqlite&logoColor=white)](https://sqlite.org)
+[![License](https://img.shields.io/badge/License-MIT-22C55E)](LICENSE)
 
-<p align="center">无需 Docker · 无需 PostgreSQL · 无需 Redis · 无需 Celery · 无需 MinIO</p>
+<br/>
+
+```bash
+pip install .  &&  pavo-start
+```
+
+**🚀 零依赖开箱即用：无需 Docker · 无需 PostgreSQL · 无需 Redis · 无需 Celery · 无需 MinIO**
+
+</div>
 
 ---
 
-<h2>🚀 项目简介</h2>
+## 🎬 它能做什么？
 
-<p><b>Pavo AI Agent</b> 是一个开源 AI 视频分镜生成平台。输入自然语言故事，通过 7 个专用 AI 智能体协作，自动输出逐镜头的专业分镜脚本。支持 MCP 协议集成、个性化创作记忆和影视专业知识注入。</p>
+给 Pavo 一段自然语言故事，它会自动完成一位专业导演需要数小时才能完成的工作：
 
-<table>
-<tr><td width="33%"><b>🎬 输入</b><br><code>一位父亲下班回家，5 岁儿子端来洗脚盆...</code></td>
-<td width="33%"><b>📋 输出</b><br>角色 + 场景 + 道具 + 逐镜分镜 + BGM</td>
-<td width="33%"><b>📡 MCP</b><br>Cursor / Claude Code / 任意 MCP 客户端</td>
-</tr>
-</table>
+```text
+输入 ──► "一位父亲下班回家，5 岁的儿子端来一盆洗脚水..."
 
-<h2>🏗️ 系统架构</h2>
+输出 ──► 角色设定 + 场景设计 + 道具清单 + 完整分镜表
+         ↓
+         镜头 01 / 全景 / 固定机位 / 父亲推开门
+         镜头 02 / 中景 / 推镜头 / 儿子端着水盆走来
+         镜头 03 / 特写 / 跟焦 / 父亲眼眶泛红
+         ...（自动生成 BGM 建议、对白、景别、运镜）
+```
 
-<pre>
-┌──────────────┐  ┌──────────────┐  ┌──────────────┐
-│ Cursor/MCP   │  │ Claude Code  │  │  Web 浏览器   │
-│ (MCP Client) │  │ (MCP Client) │  │ (Next.js)    │
-└──────┬───────┘  └──────┬───────┘  └──────┬───────┘
-       │                 │                 │
-       ▼                 ▼                 │
-┌──────────────────┐                      │
-│  MCP Server      │    ┌─────────────────┘
-│  · 12 Tools      │    │
-│  · 5 Resources   │    ▼
-│  · 2 Prompts     │  ┌──────────────┐
-└────────┬─────────┘  │  FastAPI     │
-         │            │  (port 18080)│
-         └─────┬──────┘              │
-               ▼                     │
-  ┌──────────────────────────────────┘
-  │
-  ▼
-┌────────────────────────────────────────┐
-│        ProjectService (核心编排)         │
-│  run_workflow() → 7 Agent 串行管线      │
-└────┬────┬────┬────┬────┬────┬────┬────┘
-     │    │    │    │    │    │    │
-     ▼    ▼    ▼    ▼    ▼    ▼    ▼
-┌────────────────────────────────────────┐
-│   Planner → Character → Scene → Prop  │
-│           → Storyboard → Reviewer     │
-│                     → Fixer           │
-└────────────────────────────────────────┘
-     │                        │
-     ▼                        ▼
-┌──────────┐     ┌──────────────────────┐
-│ Memory   │     │  RAG 知识库           │
-│ · 长期    │     │  · 60+ 影视知识条目   │
-│ · 会话    │     │  · 向量搜索+重排序    │
-└──────────┘     └──────────────────────┘
+并且，每一次生成都会**记住你的创作偏好**，结合**影视专业知识库**，让输出越来越懂你。
 
-📄 完整架构分析: <a href="docs/technical-architecture-report.md">技术架构报告</a>
-</pre>
+---
 
-<h2>🆕 v2.3 核心特性</h2>
+## ✨ 核心特性
 
-<table>
-<tr><th>类别</th><th>特性</th><th>说明</th></tr>
-<tr><td><b>📡 MCP Server</b></td><td>12 个 Tools · 5 Resources · 2 Prompts</td><td>标准化协议，兼容 Cursor/Claude Desktop</td></tr>
-<tr><td><b>🧠 Memory + RAG</b></td><td>双层记忆 · 60+ 影视知识条目</td><td>跨会话风格保持 + 专业知识注入</td></tr>
-<tr><td><b>👁️ Workflow 可视化</b></td><td>SVG 管线图 · 详情面板 · 时间线</td><td>7 Agent 实时执行状态一目了然</td></tr>
-<tr><td><b>♻️ 零依赖</b></td><td>SQLite · TTLCache · asyncio Queue · 本地存储</td><td><code>pip install .</code> 直接运行，无需 Docker</td></tr>
-<tr><td><b>🔐 统一安全</b></td><td>API Key 守卫 · 环境变量检查</td><td>缺失配置时用户友好提示</td></tr>
-</table>
+### 🤖 7 智能体协同管线
 
-<h2>📦 安装与启动</h2>
+不是单个 AI 一次性生成，而是 7 个专业 AI 智能体像真实剧组一样分工协作：
 
-<h3>MCP Server 模式（推荐）</h3>
-<p>在 Cursor 或 Claude Desktop 中集成使用。</p>
+```text
+用户故事
+   │
+   ▼
+① Planner 规划师 ──── 分析主题、情感、时长、叙事结构
+   │
+   ▼
+② Character 角色师 ── 设计每个角色（外貌、性格、声音、一致性 Key）
+   │
+   ▼
+③ Scene 场景师 ────── 构建场景（环境、灯光、氛围、色调）
+   │
+   ▼
+④ Prop 道具师 ──────── 规划道具（外观、交互方式、象征意义）
+   │
+   ▼
+⑤ Storyboard 分镜师 ─ 逐镜生成（景别、运镜、角度、对白、BGM）
+   │
+   ▼
+⑥ Reviewer 审查员 ─── 质量审查（逻辑、视觉、情感一致性）
+   │
+   ▼
+⑦ Fixer 修复师 ──────── 自动修复审查发现的问题
+   │
+   ▼
+完整专业分镜脚本 ✓
+```
 
-<pre><code>pip install .
-pavo-mcp-server</code></pre>
+### 🧠 Memory + RAG 双重增强（v2.3 新特性）
 
-<p>Cursor 配置（<code>.cursor/mcp.json</code>）：</p>
+Pavo 不只是一个无状态的生成器，它会**持续学习**：
 
-<pre><code>{
+- **长期记忆（Memory）**：自动提取并存储你的创作偏好（喜欢的风格、常用的镜头语言、惯用的叙事结构），在下次创作时自动注入。
+- **RAG 知识检索**：内置 60+ 条影视专业知识条目（景别定义、运镜技巧、色彩心理学、BGM 搭配原则），在分镜生成阶段自动检索并注入相关知识。
+
+```text
+Planner ◄──── Memory 注入（你的历史偏好）
+                    ↑
+              用户记忆数据库
+              (sqlite-vec 向量检索)
+
+Storyboard ◄── RAG 注入（影视专业知识）
+                    ↑
+              知识库 (60+ 条目)
+              (语义相似度召回)
+```
+
+### 🔌 原生 MCP Server
+
+Pavo 实现了完整的 [Model Context Protocol](https://modelcontextprotocol.io) 标准，可以作为独立 MCP Server 接入 **Cursor**、**Claude Desktop**、**Claude Code** 等任意 MCP 客户端。
+
+| 类型 | 数量 | 说明 |
+|------|------|------|
+| **Tools** | 12 | 项目管理、分镜生成、记忆操作、视频渲染等 |
+| **Resources** | 5 | 项目数据、分镜内容、角色设定等只读资源 |
+| **Prompts** | 2 | 内置的创作提示词模板 |
+
+### ⚡ 零依赖，开箱即用
+
+v2.3 完成了彻底的轻量化改造，告别一切重型中间件：
+
+| 组件 | 改造前 | 改造后 | 节省 |
+|------|--------|--------|------|
+| 数据库 | PostgreSQL + pgvector（Docker） | **SQLite + sqlite-vec** | ~500 MB |
+| 缓存 | Redis（Docker） | **TTLCache（进程内）** | ~150 MB |
+| 任务队列 | Celery + Redis（Docker） | **asyncio.Queue** | ~350 MB |
+| 文件存储 | MinIO（Docker） | **本地文件系统** | ~500 MB |
+| **合计** | **4 个 Docker 容器** | **零外部依赖** | **~1.5 GB** |
+
+---
+
+## 🚀 快速开始
+
+### 环境要求
+
+- Python **3.10+**
+- Node.js **18+**（仅运行前端 Web 界面时需要）
+- [Agnes AI API Key](https://apihub.agnes-ai.com)（用于 LLM 和视频生成）
+
+### 方式一：MCP Server（推荐，无需前端）
+
+适合 Cursor / Claude Desktop 用户，直接将 Pavo 作为工具接入你的 AI IDE：
+
+```bash
+# 1. 克隆仓库
+git clone https://github.com/yanzhao77/pavo-ai-agent.git
+cd pavo-ai-agent
+
+# 2. 安装依赖
+cd backend
+pip install -r requirements.txt
+
+# 3. 配置 API Key（任选其一）
+export AGNES_API_KEY="your_api_key_here"
+# 或者创建 .env 文件
+
+# 4. 启动 MCP Server
+python -m mcp_server.main
+```
+
+所有数据（数据库、存储文件、日志）将自动生成在 `~/.pavo/` 目录下，无需任何额外配置。
+
+### 方式二：完整 Web 工作台
+
+适合需要可视化界面进行创作的用户：
+
+```bash
+# 启动后端 API
+cd backend
+python -m app.main
+# 后端运行在 http://localhost:8000
+
+# 新开终端，启动前端
+cd frontend
+npm install
+npm run dev
+# 前端运行在 http://localhost:3000
+```
+
+---
+
+## 🔌 MCP 客户端接入
+
+### Cursor 配置
+
+打开 `Cursor Settings` → `Features` → `MCP Servers`，添加以下配置：
+
+```json
+{
   "mcpServers": {
     "pavo": {
-      "command": "pavo-mcp-server",
-      "env": { "AGNES_API_KEY": "sk-xxx" }
+      "command": "python",
+      "args": [
+        "-m", "mcp_server.main"
+      ],
+      "cwd": "/path/to/pavo-ai-agent/backend",
+      "env": {
+        "AGNES_API_KEY": "your_api_key_here",
+        "PAVO_HOME": "~/.pavo"
+      }
     }
   }
-}</code></pre>
+}
+```
 
-<h3>Web 模式（完整体验）</h3>
-<p>启动完整的前后端 + MCP 环境。</p>
+配置完成后，你可以在 Cursor 中直接使用自然语言调用 Pavo：
 
-<pre><code>pavo-start</code></pre>
+> *"帮我用 pavo_create_project 创建一个关于赛博朋克风格咖啡馆的短视频项目，然后用 pavo_run_workflow 生成完整分镜。"*
 
-<p>打开 <b>http://localhost:3000</b> 即可使用。</p>
+### Claude Desktop 配置
 
-<h3>环境变量</h3>
-<table>
-<tr><th>变量</th><th>说明</th><th>默认值</th></tr>
-<tr><td><code>AGNES_API_KEY</code></td><td>AI 服务 API 密钥（必填）</td><td>—</td></tr>
-<tr><td><code>AGNES_API_BASE_URL</code></td><td>API 服务地址</td><td><code>https://apihub.agnes-ai.com/v1</code></td></tr>
-<tr><td><code>LOG_LEVEL</code></td><td>日志级别</td><td><code>INFO</code></td></tr>
-</table>
+编辑 `~/Library/Application Support/Claude/claude_desktop_config.json`（macOS）：
 
-<p>复制 <code>.env.example</code> 为 <code>.env</code> 并设置 <code>AGNES_API_KEY</code> 即可。</p>
+```json
+{
+  "mcpServers": {
+    "pavo": {
+      "command": "python",
+      "args": ["-m", "mcp_server.main"],
+      "cwd": "/path/to/pavo-ai-agent/backend",
+      "env": {
+        "AGNES_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
+```
 
-<h2>📡 MCP 工具一览</h2>
+### 可用 MCP Tools 完整列表
 
-<table>
-<tr><th>工具</th><th>说明</th></tr>
-<tr><td><code>pavo_tool_create_project</code></td><td>创建项目并启动 Agent 管线</td></tr>
-<tr><td><code>pavo_tool_get_project</code></td><td>获取项目完整数据</td></tr>
-<tr><td><code>pavo_tool_list_projects</code></td><td>获取项目列表</td></tr>
-<tr><td><code>pavo_tool_generate_storyboard</code></td><td>重新生成分镜/角色/场景</td></tr>
-<tr><td><code>pavo_tool_save_memory</code></td><td>保存用户偏好到长期记忆</td></tr>
-<tr><td><code>pavo_tool_search_memory</code></td><td>检索历史记忆</td></tr>
-<tr><td><code>pavo_tool_list_memories</code></td><td>列出所有记忆</td></tr>
-<tr><td><code>pavo_tool_delete_memory</code></td><td>删除指定记忆</td></tr>
-<tr><td><code>pavo_tool_render_video</code></td><td>触发视频渲染</td></tr>
-<tr><td><code>pavo_tool_export_project</code></td><td>导出项目</td></tr>
-<tr><td><code>pavo_tool_auth_login</code></td><td>获取认证 Token</td></tr>
-</table>
+| Tool 名称 | 功能描述 |
+|-----------|---------|
+| `pavo_create_project` | 创建新的视频项目 |
+| `pavo_run_workflow` | 运行完整的 7 Agent 生成管线 |
+| `pavo_get_project` | 获取项目详情与分镜内容 |
+| `pavo_list_projects` | 列出所有项目 |
+| `pavo_update_project` | 更新项目信息 |
+| `pavo_delete_project` | 删除项目 |
+| `pavo_save_memory` | 保存用户创作偏好记忆 |
+| `pavo_search_memory` | 语义搜索历史记忆 |
+| `pavo_list_memories` | 列出所有记忆条目 |
+| `pavo_delete_memory` | 删除指定记忆 |
+| `pavo_render_video` | 触发视频渲染任务 |
+| `pavo_export_project` | 导出项目（Markdown / PDF） |
 
-<h2>📖 文档</h2>
+---
 
-<table>
-<tr><th>文档</th><th>说明</th><th>语言</th></tr>
-<tr><td><a href="docs/user-guide.md">📘 用户操作指南</a></td><td>产品使用流程、界面导航、功能详解、常见问题</td><td>中文</td></tr>
-<tr><td><a href="docs/user-guide-en.md">📘 User Guide</a></td><td>Product usage workflow, interface guide, features</td><td>English</td></tr>
-<tr><td><a href="docs/technical-documentation.md">📙 详细技术文档</a></td><td>系统架构、代码详解、API 文档、部署指南</td><td>中文</td></tr>
-<tr><td><a href="docs/technical-documentation-en.md">📙 Technical Docs</a></td><td>Architecture, code walkthrough, API reference</td><td>English</td></tr>
-<tr><td><a href="docs/技术债务解决方案报告.md">📋 技术债务报告</a></td><td>零依赖改造分析与剩余债务解决方案</td><td>中文</td></tr>
-<tr><td><a href="FINAL_REPORT.md">📋 FINAL REPORT</a></td><td>Zero-dependency refactoring completion report</td><td>English</td></tr>
-<tr><td><a href="docs/technical-architecture-report.md">🏗️ 技术架构报告</a></td><td>完整系统架构分析、组件详解、数据流、技术选型</td><td>中文</td></tr>
-</table>
+## 🏗️ 技术架构
 
-<h2>🧠 Agent 管线</h2>
+```text
+┌─────────────────────────────────────────────────────────────┐
+│                      客户端层                                │
+│   Cursor / Claude Code    │    Web 浏览器 (Next.js 14)      │
+│      (MCP Client)         │    React 18 + TailwindCSS       │
+└──────────────┬────────────┴──────────────┬──────────────────┘
+               │ MCP Protocol              │ HTTP REST API
+               ▼                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      服务层                                  │
+│  ┌─────────────────────┐    ┌─────────────────────────────┐ │
+│  │    MCP Server        │    │      FastAPI Backend         │ │
+│  │  · 12 Tools          │    │      (port 18080)            │ │
+│  │  · 5 Resources       │    │  · REST API Routes           │ │
+│  │  · 2 Prompts         │    │  · Auth Service              │ │
+│  │  · guards 安全检查   │    │  · Static Files              │ │
+│  └──────────┬──────────┘    └──────────────┬──────────────┘ │
+│             └──────────────┬───────────────┘                 │
+│                            ▼                                  │
+│              ┌─────────────────────────┐                     │
+│              │   ProjectService (核心)  │                     │
+│              │   run_workflow() 编排    │                     │
+│              └────────────┬────────────┘                     │
+└───────────────────────────┼─────────────────────────────────┘
+                            │ 7 Agent 串行管线
+                            ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      Agent 层                                │
+│  Planner → Character → Scene → Prop → Storyboard            │
+│                                    → Reviewer → Fixer       │
+│      ↑ Memory 注入                      ↑ RAG 知识注入      │
+└──────────────────────────┬──────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      基础设施层（零依赖）                     │
+│  SQLite + sqlite-vec  │  TTLCache  │  asyncio.Queue          │
+│  (关系型 + 向量检索)   │  (缓存层)  │  (任务队列)             │
+│                                                              │
+│  LocalStorageClient   │  aiosqlite │  SQLAlchemy 2.0         │
+│  (文件存储)            │  (异步驱动) │  (ORM + 迁移)          │
+└─────────────────────────────────────────────────────────────┘
+```
 
-<pre>
-用户故事 ──► 规划师 ──► 角色 ──► 场景 ──► 道具 ──► 分镜 ──► 审查 ──► 修复 ──► 完成！
-                  ↑                        ↑
-            Memory 注入               RAG 知识注入</pre>
+### 技术栈
 
-<p>7 个 Agent 协作完成从故事到分镜的完整转化，串行执行。</p>
+| 层次 | 技术 | 说明 |
+|------|------|------|
+| **后端框架** | FastAPI 0.115 + Uvicorn | 高性能异步 Web 框架 |
+| **MCP 协议** | MCP Python SDK 1.28+ | 标准 Tools / Resources 接口 |
+| **ORM** | SQLAlchemy 2.0（异步） | 数据库抽象层 |
+| **数据库** | SQLite + aiosqlite | 本地轻量级存储，WAL 模式 |
+| **向量检索** | sqlite-vec | SQLite 原生向量扩展，替代 pgvector |
+| **任务队列** | asyncio.Queue + Semaphore | 纯内存并发控制，替代 Celery |
+| **文件存储** | LocalStorageClient | 本地文件系统，替代 MinIO/S3 |
+| **前端框架** | Next.js 14 + React 18 | 服务端渲染 + 客户端交互 |
+| **前端样式** | TailwindCSS + shadcn/ui | 现代化 UI 组件库 |
+| **LLM 接入** | Agnes AI API（OpenAI 兼容） | 支持多模型切换 |
 
-<table>
-<tr><th>#</th><th>Agent</th><th>输入</th><th>输出</th></tr>
-<tr><td>1</td><td><b>Planner</b> 规划师</td><td>用户故事</td><td>角色、场景、主题、情感、时长分析</td></tr>
-<tr><td>2</td><td><b>Character</b> 角色</td><td>故事文本</td><td>角色设定（姓名、年龄、外貌、性格、声音、一致性 Key）</td></tr>
-<tr><td>3</td><td><b>Scene</b> 场景</td><td>故事 + 角色</td><td>场景设置（环境、灯光、氛围）</td></tr>
-<tr><td>4</td><td><b>Prop</b> 道具</td><td>故事 + 角色 + 场景</td><td>道具列表（外观、交互、意义）</td></tr>
-<tr><td>5</td><td><b>Storyboard</b> 分镜</td><td>故事 + 角色 + 场景 + 道具</td><td>逐镜分镜表（景别、运镜、角度、对白、BGM）</td></tr>
-<tr><td>6</td><td><b>Reviewer</b> 审查</td><td>完整项目</td><td>质量审查报告（是否需要修复）</td></tr>
-<tr><td>7</td><td><b>Fixer</b> 修复</td><td>审查报告</td><td>修复后的分镜</td></tr>
-</table>
+---
 
-<p>v2.3 新增 Memory + RAG 注入层：Memory 在 <b>Planner</b> 阶段注入用户历史偏好，RAG 在 <b>Storyboard</b> 阶段注入影视专业知识，让分镜更懂用户、更专业。</p>
+## 📁 项目结构
 
-<h2>♻️ 零依赖架构</h2>
+```text
+pavo-ai-agent/
+├── backend/
+│   ├── app/
+│   │   ├── agents/          # 7 个 AI 智能体
+│   │   │   ├── planner.py
+│   │   │   ├── character_agent.py
+│   │   │   ├── scene_agent.py
+│   │   │   ├── prop_agent.py
+│   │   │   ├── storyboard_agent.py
+│   │   │   ├── reviewer.py
+│   │   │   └── fixer.py
+│   │   ├── api/             # REST API 路由
+│   │   ├── db/              # 数据库引擎与迁移
+│   │   ├── models/          # ORM 数据模型
+│   │   ├── services/        # 核心业务服务
+│   │   │   ├── auth.py      # 认证服务
+│   │   │   ├── cache.py     # TTLCache 统一缓存
+│   │   │   ├── storage.py   # 本地文件存储
+│   │   │   ├── task_queue.py # asyncio 任务队列
+│   │   │   └── video_tasks.py # 视频渲染任务
+│   │   └── vectorstore/     # VectorStore 抽象接口
+│   ├── mcp_server/
+│   │   ├── main.py          # MCP Server 入口（12 Tools）
+│   │   ├── memory/          # 记忆系统
+│   │   │   ├── store.py     # 记忆存储与检索
+│   │   │   └── embedding_client.py # Embedding 接口
+│   │   ├── rag/             # RAG 知识库
+│   │   │   ├── builder.py   # 知识库构建
+│   │   │   └── retriever.py # 语义检索
+│   │   ├── middleware/      # 记忆注入中间件
+│   │   └── tools/           # MCP Tool 实现
+│   └── tests/               # 测试套件（47 个用例）
+├── frontend/
+│   ├── src/
+│   │   ├── app/             # Next.js App Router
+│   │   ├── components/      # React 组件
+│   │   └── lib/             # API 客户端
+│   └── package.json
+└── docs/                    # 技术文档
+```
 
-<table>
-<tr><th>组件</th><th>旧方案</th><th>新方案</th><th>节省</th></tr>
-<tr><td>数据库</td><td>PostgreSQL + pgvector (Docker)</td><td>SQLite + sqlite-vec</td><td>~500MB</td></tr>
-<tr><td>缓存</td><td>Redis (Docker)</td><td>TTLCache (内存)</td><td>~150MB</td></tr>
-<tr><td>任务队列</td><td>Celery + Redis (Docker)</td><td>asyncio.Queue</td><td>~350MB</td></tr>
-<tr><td>文件存储</td><td>MinIO (Docker)</td><td>本地文件系统</td><td>~500MB</td></tr>
-<tr><td><b>合计</b></td><td><b>4 个 Docker 容器</b></td><td><b>零外部依赖</b></td><td><b>~1.5GB</b></td></tr>
-</table>
+---
 
-<h2>🛤️ 版本路线图</h2>
+## 🗺️ 版本路线图
 
-<table>
-<tr><th>版本</th><th>核心特性</th><th>状态</th></tr>
-<tr><td><b>v1.0</b></td><td>7 Agent 管线 + 前端界面 + 基础导出</td><td>✅ 已完成</td></tr>
-<tr><td><b>v2.0</b></td><td>MCP Server 标准化接口</td><td>✅ 已完成</td></tr>
-<tr><td><b>v2.3</b></td><td>Memory + RAG + MCP 扩展 + Workflow 可视化 + 零依赖</td><td>✅ 已发布 ⬅</td></tr>
-<tr><td><b>v3.0</b></td><td>视频 Agent 完整版（Prompt 优化 + 多版本管理）</td><td>📅 规划中</td></tr>
-</table>
+| 版本 | 核心特性 | 状态 |
+|------|---------|------|
+| **v1.0** | 7 Agent 基础管线 + 前端可视化 + Markdown/PDF 导出 | ✅ 已完成 |
+| **v2.0** | MCP Server 标准化接口（8 个核心 Tools） | ✅ 已完成 |
+| **v2.3** | Memory + RAG + MCP 扩展 + 零依赖轻量化改造 | ✅ **当前版本** |
+| **v3.0** | 视频 Agent 完整版（Prompt 动态优化 + 多版本资产管理） | 📅 规划中 |
 
-<hr>
+---
 
-<p align="center">
-  Built with ❤️ by <a href="https://github.com/yanzhao77">yanzhao77</a> ·
-  <a href="https://github.com/yanzhao77/pavo-ai-agent">GitHub</a> ·
-  <a href="README_EN.md">English README</a>
-</p>
+## 📖 文档
+
+| 文档 | 说明 |
+|------|------|
+| [📘 用户操作指南](docs/user-guide.md) | 产品使用流程、界面导航、功能详解、常见问题 |
+| [📙 技术架构报告](docs/technical-architecture-report.md) | 完整系统架构分析、组件详解、数据流 |
+| [📋 技术债务报告](docs/技术债务解决方案报告.md) | 零依赖改造分析与剩余债务解决方案 |
+| [🌐 English User Guide](docs/user-guide-en.md) | Product usage workflow, interface guide |
+| [🌐 Technical Documentation](docs/technical-documentation-en.md) | Architecture, API reference, deployment |
+
+---
+
+## 🙏 致谢
+
+Pavo 的诞生离不开以下优秀的开源项目与平台：
+
+- **[Agnes AI](https://agnes-ai.com)** — 提供稳定强大的 LLM 与视频生成 API
+- **[Model Context Protocol](https://modelcontextprotocol.io)** — 推动 AI 工具标准化的 MCP 协议
+- **[sqlite-vec](https://github.com/asg017/sqlite-vec)** — 极速的 SQLite 本地向量搜索扩展
+- **[FastAPI](https://fastapi.tiangolo.com)** — 高性能 Python Web 框架
+- **[Next.js](https://nextjs.org)** — 卓越的 React 全栈框架
+
+---
+
+<div align="center">
+
+Built with ❤️ by [yanzhao77](https://github.com/yanzhao77)
+
+[GitHub](https://github.com/yanzhao77/pavo-ai-agent) · [提交 Issue](https://github.com/yanzhao77/pavo-ai-agent/issues) · [English README](README_EN.md)
+
+</div>
