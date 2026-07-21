@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Film, Users, MapPin, Package, Video, ChevronDown, ChevronUp, Copy, Check, Loader2 } from "lucide-react";
+import { Film, Users, MapPin, Package, Video, ListOrdered, ChevronDown, ChevronUp, Copy, Check, Loader2 } from "lucide-react";
 import type { Project, StoryboardScene, Character, Scene, Prop } from "@/types/project";
 import { VideoPanel } from "./VideoPanel";
 import { Timeline } from "./Timeline";
@@ -29,7 +29,7 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
   };
   const [expandedScene, setExpandedScene] = useState<number | null>(0);
   const [copied, setCopied] = useState<string | null>(null);
-  const [tab, setTab] = useState<"characters" | "scenes" | "props" | "storyboard" | "video">("storyboard");
+  const [tab, setTab] = useState<"characters" | "scenes" | "props" | "storyboard" | "video" | "timeline">("storyboard");
   const [rendering, setRendering] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const { addToast } = useToast();
