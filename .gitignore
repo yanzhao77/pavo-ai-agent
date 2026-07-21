@@ -1,5 +1,6 @@
 # Environment
 .env
+backend/.env
 .env.local
 *.env.local
 
@@ -10,6 +11,7 @@ coverage.xml
 htmlcov/
 
 # Python
+venv/
 __pycache__/
 *.py[cod]
 *.pyc

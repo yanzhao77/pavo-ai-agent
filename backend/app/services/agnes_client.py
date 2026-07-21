@@ -66,12 +66,13 @@ class AgnesAIClient:
         self.base_url = settings.agnes_api_base_url
         self.api_key = settings.agnes_api_key
         self._last_call = 0.0
-        self._min_interval = 0.5
+        self._min_interval = 1.0  # Increased from 0.5 to 1.0
+        self.max_retries = 3
+        self.retry_base_delay = 2.0  # Increased from 1.0
+        self.retry_max_delay = 30.0
+        # Reuse a single client with connection pooling
         self._timeout = httpx.Timeout(connect=15.0, read=120.0, write=30.0, pool=10.0)
         self._client = httpx.AsyncClient(timeout=self._timeout)
-        self.max_retries = 3
-        self.retry_base_delay = 1.0
-        self.retry_max_delay = 30.0
 
     async def _rate_limit(self):
         now = time.time()
@@ -189,6 +190,10 @@ class AgnesAIClient:
         except AgnesAIError as e:
             logger.error(f"Agnes AI video error (final): {e}")
             raise
+
+    async def close(self):
+        """Close the httpx client."""
+        await self._client.aclose()
 
 
 agnes_client = AgnesAIClient()

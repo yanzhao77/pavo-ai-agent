@@ -12,7 +12,7 @@ class Settings(BaseSettings):
     agnes_api_base_url: str = "https://apihub.agnes-ai.com/v1"
     agnes_api_key: str = ""
     pavo_home: str = str(Path.home() / ".pavo")
-    static_port: int = 18080
+    static_port: int = int(os.environ.get("PORT", "18080"))
     run_mode: str = "local"
     model_config = {"env_file": ".env", "env_file_encoding": "utf-8"}
 

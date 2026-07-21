@@ -1,6 +1,7 @@
 import json
 import asyncio
 import uuid
+import logging
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
@@ -51,8 +52,26 @@ def _get_user_id(token: str = "") -> str:
 async def create_project(req: CreateProjectRequest, session: AsyncSession = Depends(get_session)):
     service = ProjectService(session)
     project = await service.create_project(req.input, req.user_id)
-    asyncio.create_task(service.run_workflow(project.id))
-    return {"projectId": str(project.id), "status": project.status.value}
+    project_id_str = str(project.id)
+    # Detach project_id from session so background task can create its own
+    asyncio.create_task(_run_workflow_background(project_id_str))
+    return {"projectId": project_id_str, "status": project.status.value}
+
+
+async def _run_workflow_background(project_id_str: str):
+    """Run the 7-agent workflow in a dedicated session."""
+    import traceback
+    from app.db.database import async_session as make_session
+    from app.services.project_service import ProjectService
+    try:
+        async with make_session() as bg_session:
+            svc = ProjectService(bg_session)
+            await svc.run_workflow(project_id_str)
+            print(f"✅ Workflow completed for {project_id_str}")
+    except Exception as e:
+        print(f"❌ Workflow FAILED for {project_id_str}:")
+        print(traceback.format_exc())
+        raise
 
 @router.get("/projects/{project_id}")
 async def get_project(project_id: str, session: AsyncSession = Depends(get_session)):
@@ -249,7 +268,7 @@ async def get_video_details(project_id: str,
     for v in videos:
         if v.get("result") and v["result"].get("url"):
             storage = get_storage()
-            object_name = f"projects/{project_id}/shots/{v.get("shot_number", 0)}.mp4"
+            object_name = f"projects/{project_id}/shots/{v.get('shot_number', 0)}.mp4"
             v["storage_url"] = storage.get_url(object_name)
     return {"videos": videos}
 

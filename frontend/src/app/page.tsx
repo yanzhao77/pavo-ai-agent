@@ -35,7 +35,7 @@ function HomeContent({ auth }: { auth: AuthState }) {
 
   const connectSSE = (projectId: string) => {
     if (eventSourceRef.current) eventSourceRef.current.close();
-    const es = new EventSource(`http://localhost:8000/api/projects/${projectId}/stream?token=${auth.token}`);
+    const es = new EventSource(`http://localhost:18080/api/projects/${projectId}/stream?token=${auth.token}`);
     eventSourceRef.current = es;
     es.onmessage = (event) => {
       try {

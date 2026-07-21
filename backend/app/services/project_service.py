@@ -1,4 +1,5 @@
 import uuid
+import asyncio
 import logging
 from datetime import datetime
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -77,7 +78,8 @@ class ProjectService:
         self.fixer = FixerAgent()
 
     async def create_project(self, input_text: str, user_id: str = "") -> Project:
-        project = Project(id=uuid.uuid4(), input_raw=input_text, user_id=user_id, status=ProjectStatus.GENERATING)
+        project_id = str(uuid.uuid4())
+        project = Project(id=project_id, input_raw=input_text, user_id=user_id, status=ProjectStatus.GENERATING)
         self.session.add(project)
         await self.session.commit()
         return project
@@ -99,7 +101,10 @@ class ProjectService:
         await self._log_trace(project, "video", f"Generating {len(prompts)} video prompts", "", "")
         video_results = []
         for i, p in enumerate(prompts):
-            await self._log_trace(project, "video", f"Generating shot {p[chr(115)+chr(104)+chr(111)+chr(116)+chr(95)+chr(110)+chr(117)+chr(109)+chr(98)+chr(101)+chr(114)]}", p["prompt"][:80], "")
+            # Delay between shot renders to avoid rate limiting
+            if i > 0:
+                await asyncio.sleep(15)
+            await self._log_trace(project, "video", f"Generating shot {p['shot_number']}", p["prompt"][:80], "")
             try:
                 result = await agnes_client.generate_video(p["prompt"])
                 storage_url = ""
@@ -122,7 +127,7 @@ class ProjectService:
         project.videos = video_results
         return {"videos": video_results}
 
-    async def run_workflow(self, project_id: uuid.UUID):
+    async def run_workflow(self, project_id: str):
         result = await self.session.execute(select(Project).where(Project.id == project_id))
         project = result.scalar_one_or_none()
         if not project:
@@ -132,30 +137,35 @@ class ProjectService:
             await self._log_trace(project, "planner", "Analyzing story", project.input_raw, "")
             plan = await self.planner.plan(project.input_raw)
             await self._log_trace(project, "planner", "Plan created", project.input_raw, plan)
+            await asyncio.sleep(2)  # Wait before next agent call
 
             await self._log_trace(project, "character", "Generating characters", project.input_raw, "")
             chars = await self.character_agent.generate(project.input_raw)
             chars = validate_characters(chars)
             project.characters = chars
             await self._log_trace(project, "character", "Done", project.input_raw, chars)
+            await asyncio.sleep(2)
 
             await self._log_trace(project, "scene", "Generating scenes", project.input_raw, "")
             scenes = await self.scene_agent.generate(project.input_raw, chars)
             scenes = validate_scenes(scenes)
             project.scenes = scenes
             await self._log_trace(project, "scene", "Done", project.input_raw, scenes)
+            await asyncio.sleep(2)
 
             await self._log_trace(project, "prop", "Generating props", project.input_raw, "")
             props = await self.prop_agent.generate(project.input_raw, chars, scenes)
             props = validate_props(props)
             project.props = props
             await self._log_trace(project, "prop", "Done", project.input_raw, props)
+            await asyncio.sleep(2)
 
             await self._log_trace(project, "storyboard", "Generating storyboard", project.input_raw, "")
             storyboard = await self.storyboard_agent.generate(project.input_raw, chars, scenes, props)
             storyboard = validate_storyboard(storyboard)
             project.storyboard = storyboard
             await self._log_trace(project, "storyboard", "Done", project.input_raw, storyboard)
+            await asyncio.sleep(2)
 
             review = await self.reviewer.review(project)
             if review.get("needs_fix"):

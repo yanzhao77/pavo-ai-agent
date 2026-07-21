@@ -23,7 +23,7 @@ _PAVO_HOME = Path(_env_home) if _env_home else Path.home() / ".pavo"
 STORAGE_DIR = _PAVO_HOME / "storage"
 STORAGE_DIR.mkdir(parents=True, exist_ok=True)
 
-_STATIC_PORT = int(os.environ.get("PAVO_STATIC_PORT", "18080"))
+_STATIC_PORT = int(os.environ.get("PAVO_STATIC_PORT", os.environ.get("PORT", "18080")))
 
 
 class StorageClient:
@@ -43,7 +43,11 @@ class StorageClient:
         return self.get_url(object_name)
 
     def get_url(self, object_name: str) -> str:
-        return f"http://localhost:{_STATIC_PORT}/static/{object_name}"
+        public_base = os.environ.get(
+            "PAVO_PUBLIC_URL",
+            f"http://localhost:{_STATIC_PORT}",
+        )
+        return f"{public_base}/static/{object_name}"
 
     def delete(self, object_name: str) -> bool:
         fp = self.base_dir / object_name

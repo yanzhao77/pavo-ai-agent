@@ -1,0 +1,15 @@
+venv/
+.git/
+__pycache__/
+*.pyc
+node_modules/
+.next/
+frontend/node_modules/
+frontend/.next/
+docs/
+scripts/
+*.md
+*.pyc
+.DS_Store
+.coveragerc
+pytest.ini
