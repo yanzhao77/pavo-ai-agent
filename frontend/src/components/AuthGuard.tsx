@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { UserIcon, LogIn } from "lucide-react";
+import { API_BASE } from "@/lib/api";
 
 export interface AuthState {
   token: string;
@@ -23,7 +24,7 @@ export function AuthGuard({ onAuth }: AuthGuardProps) {
     setLoading(true);
     setError("");
     try {
-      const res = await fetch("http://localhost:18080/api/auth/login", {
+      const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ username: username.trim() }),

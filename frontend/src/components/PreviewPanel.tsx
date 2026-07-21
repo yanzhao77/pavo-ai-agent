@@ -5,7 +5,7 @@ import { Film, Users, MapPin, Package, Video, ChevronDown, ChevronUp, Copy, Chec
 import type { Project, StoryboardScene, Character, Scene, Prop } from "@/types/project";
 import { VideoPanel } from "./VideoPanel";
 import { Timeline } from "./Timeline";
-import { renderProject as apiRenderProject, ApiError } from "@/lib/api";
+import { renderProject as apiRenderProject, API_BASE, ApiError } from "@/lib/api";
 import { useToast } from "./Toast";
 
 interface PreviewPanelProps {
@@ -17,7 +17,7 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
   const handleExport = async () => {
     if (!project?.id) return;
     try {
-      const res = await fetch(`http://localhost:18080/api/projects/${project.id}/export?format=markdown`);
+      const res = await fetch(`${API_BASE}/projects/${project.id}/export?format=markdown`);
       if (!res.ok) throw new Error();
       const blob = await res.blob();
       const a = document.createElement("a");
@@ -117,7 +117,7 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
             project={project}
             onSave={async (updatedStoryboard) => {
               try {
-                const res = await fetch(`http://localhost:18080/api/projects/${project.id}`, {
+                const res = await fetch(`${API_BASE}/projects/${project.id}`, {
                   method: "PATCH",
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({ storyboard: updatedStoryboard }),

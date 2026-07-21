@@ -6,7 +6,7 @@ import { PreviewPanel } from "@/components/PreviewPanel";
 import { ToastProvider, useToast } from "@/components/Toast";
 import { CardSkeleton, StoryboardSkeleton } from "@/components/Skeleton";
 import { AuthGuard, type AuthState } from "@/components/AuthGuard";
-import { createProject, getProject as apiGetProject, ApiError } from "@/lib/api";
+import { createProject, getProject as apiGetProject, API_BASE, ApiError } from "@/lib/api";
 import type { Project } from "@/types/project";
 
 function HomeContent({ auth }: { auth: AuthState }) {
@@ -35,7 +35,7 @@ function HomeContent({ auth }: { auth: AuthState }) {
 
   const connectSSE = (projectId: string) => {
     if (eventSourceRef.current) eventSourceRef.current.close();
-    const es = new EventSource(`http://localhost:18080/api/projects/${projectId}/stream?token=${auth.token}`);
+    const es = new EventSource(`${API_BASE}/projects/${projectId}/stream?token=${auth.token}`);
     eventSourceRef.current = es;
     es.onmessage = (event) => {
       try {
