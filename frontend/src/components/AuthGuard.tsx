@@ -1,7 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { UserIcon, LogIn } from "lucide-react";
+import { useState } from "react";
 import { API_BASE } from "@/lib/api";
 
 export interface AuthState {
@@ -42,33 +41,77 @@ export function AuthGuard({ onAuth }: AuthGuardProps) {
   };
 
   return (
-    <div className="flex h-screen items-center justify-center bg-gray-50">
-      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-8 max-w-sm w-full mx-4">
-        <div className="flex items-center justify-center w-12 h-12 bg-blue-100 rounded-full mx-auto mb-4">
-          <UserIcon className="w-6 h-6 text-blue-600" />
+    <div className="min-h-screen bg-cream flex">
+      {/* Left — branding */}
+      <div className="hidden lg:flex flex-1 items-center justify-center bg-gradient-to-br from-pavo-50 to-pavo-100">
+        <div className="max-w-md text-center px-8">
+          <div className="w-16 h-16 bg-warm rounded-2xl flex items-center justify-center mx-auto mb-6">
+            <span className="text-white text-2xl font-bold">P</span>
+          </div>
+          <h1 className="text-4xl font-bold text-warm leading-tight">
+            Free Your Creativity,
+            <br />
+            <span className="text-pavo-500">Manifest Ideas Instantly</span>
+          </h1>
+          <p className="text-pavo-400 mt-4 text-sm leading-relaxed">
+            AI-powered video storyboard generation. Describe your vision, and let
+            our agents craft characters, scenes, and storyboards in seconds.
+          </p>
         </div>
-        <h1 className="text-xl font-semibold text-center text-gray-900">Pavo AI Agent</h1>
-        <p className="text-sm text-center text-gray-500 mt-1">Enter your username to start</p>
-        <div className="mt-6">
-          <input
-            type="text"
-            value={username}
-            onChange={(e) => setUsername(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleLogin()}
-            placeholder="Your username..."
-            className="w-full px-3 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-            disabled={loading}
-          />
-          {error && <p className="text-sm text-red-500 mt-2">{error}</p>}
-          <button
-            onClick={handleLogin}
-            disabled={loading || !username.trim()}
-            className="w-full mt-3 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 flex items-center justify-center gap-2"
-          >
-            {loading ? "Connecting..." : (
-              <><LogIn className="w-4 h-4" /> Start</>
+      </div>
+
+      {/* Right — form */}
+      <div className="flex-1 flex items-center justify-center px-6">
+        <div className="w-full max-w-sm">
+          <div className="lg:hidden mb-8 text-center">
+            <div className="w-12 h-12 bg-warm rounded-xl flex items-center justify-center mx-auto mb-4">
+              <span className="text-white text-lg font-bold">P</span>
+            </div>
+            <h1 className="text-2xl font-bold text-warm">Pavo</h1>
+          </div>
+
+          <h2 className="text-xl font-semibold text-warm">Welcome to Pavo</h2>
+          <p className="text-sm text-pavo-400 mt-1">Enter your details to sign in</p>
+
+          <div className="mt-8 space-y-4">
+            <div>
+              <label className="text-xs font-medium text-warm/60 uppercase tracking-wider mb-1.5 block">
+                Username
+              </label>
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleLogin()}
+                placeholder="Your username..."
+                className="input-base"
+                disabled={loading}
+                autoFocus
+              />
+            </div>
+
+            {error && (
+              <p className="text-sm text-red-500 bg-red-50 rounded-lg px-3 py-2">{error}</p>
             )}
-          </button>
+
+            <button
+              onClick={handleLogin}
+              disabled={loading || !username.trim()}
+              className="btn-primary w-full"
+            >
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <svg className="animate-spin w-4 h-4" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Connecting...
+                </span>
+              ) : (
+                "Sign In"
+              )}
+            </button>
+          </div>
         </div>
       </div>
     </div>

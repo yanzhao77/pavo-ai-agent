@@ -1,7 +1,7 @@
 ﻿"use client";
 
 import { useState } from "react";
-import { Film, Users, MapPin, Package, Video, ListOrdered, ChevronDown, ChevronUp, Copy, Check, Loader2 } from "lucide-react";
+import { Film, Users, MapPin, Package, Video, ListOrdered, ChevronDown, ChevronUp, Copy, Check, Loader2, Download } from "lucide-react";
 import type { Project, StoryboardScene, Character, Scene, Prop } from "@/types/project";
 import { VideoPanel } from "./VideoPanel";
 import { Timeline } from "./Timeline";
@@ -31,7 +31,6 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
   const [copied, setCopied] = useState<string | null>(null);
   const [tab, setTab] = useState<"characters" | "scenes" | "props" | "storyboard" | "video" | "timeline">("storyboard");
   const [rendering, setRendering] = useState(false);
-  const [exportOpen, setExportOpen] = useState(false);
   const { addToast } = useToast();
 
   const handleRender = async () => {
@@ -58,11 +57,10 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
 
   if (!project) {
     return (
-      <div className="flex-1 flex items-center justify-center bg-gray-50">
+      <div className="flex-1 flex items-center justify-center">
         <div className="text-center">
-          <Film className="w-12 h-12 text-gray-300 mx-auto mb-3" />
-          <p className="text-gray-500 text-sm">Enter a story idea to begin</p>
-          <p className="text-gray-400 text-xs mt-1">The AI agent will generate characters, scenes, props, and a full storyboard</p>
+          <Film className="w-12 h-12 text-pavo-300 mx-auto mb-3" />
+          <p className="text-pavo-400 text-sm">Enter a story idea to begin</p>
         </div>
       </div>
     );
@@ -78,36 +76,45 @@ export function PreviewPanel({ project, onProjectUpdate }: PreviewPanelProps) {
   ];
 
   return (
-    <div className="flex-1 flex flex-col bg-gray-50">
-      <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-1">
+    <div className="flex-1 flex flex-col min-w-0">
+      {/* Tab bar */}
+      <div className="bg-white border-b border-pavo-100 px-4 lg:px-6 py-2 flex items-center gap-0.5 overflow-x-auto">
         {tabs.map((t) => (
           <button
             key={t.id}
             onClick={() => setTab(t.id)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg transition-colors ${
-              tab === t.id ? "bg-blue-100 text-blue-700" : "text-gray-600 hover:bg-gray-100"
+            className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+              tab === t.id
+                ? "bg-pavo-100 text-warm"
+                : "text-pavo-400 hover:text-warm/70 hover:bg-pavo-50"
             }`}
           >
-            <t.icon className="w-4 h-4" />
+            <t.icon className="w-3.5 h-3.5" />
             {t.label}
             {t.count !== undefined && t.count > 0 && (
-              <span className="text-xs bg-gray-200 text-gray-600 rounded-full px-1.5">{t.count}</span>
+              <span className="text-[10px] bg-pavo-200 text-warm/60 rounded-full px-1.5">{t.count}</span>
             )}
           </button>
         ))}
         <div className="flex-1" />
         {project.storyboard && (
-          <button
-            onClick={() => copyText(JSON.stringify(project.storyboard, null, 2), "all")}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-sm text-gray-600 hover:bg-gray-100 rounded-lg"
-          >
-            {copied === "all" ? <Check className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-            Copy All
-          </button>
+          <>
+            <button onClick={handleExport} className="btn-ghost text-xs flex items-center gap-1">
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export</span>
+            </button>
+            <button
+              onClick={() => copyText(JSON.stringify(project.storyboard, null, 2), "all")}
+              className="btn-ghost text-xs"
+            >
+              {copied === "all" ? <Check className="w-3.5 h-3.5 text-green-500" /> : <Copy className="w-3.5 h-3.5" />}
+            </button>
+          </>
         )}
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6">
         {tab === "storyboard" && renderStoryboard(project.storyboard, expandedScene, setExpandedScene, copyText, copied)}
         {tab === "characters" && renderCharacters(project.characters)}
         {tab === "scenes" && renderScenes(project.scenes)}
@@ -149,63 +156,97 @@ function renderStoryboard(
   copied: string | null
 ) {
   if (!storyboard?.scenes?.length) {
-    return <div className="text-center text-gray-400 text-sm py-12">Waiting for storyboard generation...</div>;
+    return <div className="text-center text-pavo-400 text-sm py-12">Waiting for storyboard generation...</div>;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-        <h2 className="font-semibold text-gray-900">{storyboard.projectName || "Untitled"}</h2>
-        <p className="text-sm text-gray-500 mt-1">BGM: {storyboard.globalBGM || "Not specified"}</p>
+    <div className="space-y-3 max-w-3xl">
+      <div className="card p-4">
+        <h2 className="font-semibold text-warm">{storyboard.projectName || "Untitled"}</h2>
+        {storyboard.globalBGM && (
+          <p className="text-xs text-pavo-400 mt-1">BGM: {storyboard.globalBGM}</p>
+        )}
       </div>
       {storyboard.scenes.map((scene: StoryboardScene, i: number) => (
-        <div key={i} className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+        <div key={i} className="card overflow-hidden">
           <button
             onClick={() => setExpandedScene(expandedScene === i ? null : i)}
-            className="w-full flex items-center justify-between p-4 hover:bg-gray-50"
+            className="w-full flex items-center justify-between p-4 hover:bg-pavo-50 transition-colors"
           >
-            <div className="flex items-center gap-3">
-              <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded">{scene.duration}</span>
-              <span className="font-medium text-gray-900">{scene.title}</span>
+            <div className="flex items-center gap-3 min-w-0">
+              <span className="text-[11px] font-medium text-warm bg-pavo-100 px-2 py-0.5 rounded shrink-0">
+                {scene.duration}
+              </span>
+              <span className="font-medium text-warm text-sm truncate">{scene.title}</span>
             </div>
-            {expandedScene === i ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />}
+            {expandedScene === i ? (
+              <ChevronUp className="w-4 h-4 text-pavo-300 shrink-0" />
+            ) : (
+              <ChevronDown className="w-4 h-4 text-pavo-300 shrink-0" />
+            )}
           </button>
           {expandedScene === i && (
-            <div className="px-4 pb-4 space-y-3">
-              <p className="text-sm text-gray-600"><span className="font-medium">Mood:</span> {scene.mood}</p>
-              <p className="text-sm text-gray-600"><span className="font-medium">Music:</span> {scene.music}</p>
+            <div className="px-4 pb-4 space-y-3 border-t border-pavo-100 pt-3">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="text-[11px] font-medium text-pavo-400 uppercase">Mood</span>
+                  <p className="text-warm mt-0.5">{scene.mood}</p>
+                </div>
+                <div>
+                  <span className="text-[11px] font-medium text-pavo-400 uppercase">Music</span>
+                  <p className="text-warm mt-0.5">{scene.music}</p>
+                </div>
+              </div>
               {scene.keyframe && (
-                <div className="bg-gray-50 rounded p-3">
-                  <p className="text-xs font-medium text-gray-500 mb-1">Key Frame</p>
-                  <p className="text-sm text-gray-700">{scene.keyframe}</p>
+                <div className="bg-pavo-50 rounded-lg p-3">
+                  <span className="text-[11px] font-medium text-pavo-400 uppercase">Key Frame</span>
+                  <p className="text-sm text-warm mt-1">{scene.keyframe}</p>
                 </div>
               )}
-              <div className="space-y-2 mt-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-gray-500 uppercase">Shots ({scene.shots?.length || 0})</span>
+              <div>
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-[11px] font-medium text-pavo-400 uppercase">
+                    Shots ({scene.shots?.length || 0})
+                  </span>
                   <button
                     onClick={() => copyText(JSON.stringify(scene.shots, null, 2), `scene-${i}`)}
-                    className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700"
+                    className="flex items-center gap-1 text-xs text-pavo-400 hover:text-warm/70"
                   >
                     {copied === `scene-${i}` ? <Check className="w-3 h-3 text-green-500" /> : <Copy className="w-3 h-3" />}
                     Copy
                   </button>
                 </div>
-                {scene.shots?.map((shot: any, j: number) => (
-                  <div key={j} className="bg-gray-50 rounded p-3 text-sm">
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-medium text-gray-500">#{shot.shotNumber}</span>
-                      <span className="text-xs bg-gray-200 text-gray-700 rounded px-1.5">{shot.shotType}</span>
-                      <span className="text-xs bg-gray-200 text-gray-700 rounded px-1.5">{shot.cameraMove}</span>
-                      <span className="text-xs bg-gray-200 text-gray-700 rounded px-1.5">{shot.cameraAngle}</span>
-                      <span className="text-xs text-gray-400 ml-auto">{shot.duration}</span>
+                <div className="space-y-2">
+                  {scene.shots?.map((shot: any, j: number) => (
+                    <div key={j} className="bg-pavo-50 rounded-lg p-3">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-[11px] font-medium text-pavo-500">#{shot.shotNumber}</span>
+                        {shot.shotType && (
+                          <span className="text-[11px] bg-white text-warm/70 rounded px-1.5 py-0.5 border border-pavo-200">
+                            {shot.shotType}
+                          </span>
+                        )}
+                        {shot.cameraMove && (
+                          <span className="text-[11px] bg-white text-warm/70 rounded px-1.5 py-0.5 border border-pavo-200">
+                            {shot.cameraMove}
+                          </span>
+                        )}
+                        {shot.cameraAngle && (
+                          <span className="text-[11px] bg-white text-warm/70 rounded px-1.5 py-0.5 border border-pavo-200">
+                            {shot.cameraAngle}
+                          </span>
+                        )}
+                        <span className="text-[11px] text-pavo-400 ml-auto">{shot.duration}</span>
+                      </div>
+                      <p className="text-sm text-warm mt-1.5">{shot.description}</p>
+                      {shot.dialogue && shot.dialogue !== "-" && (
+                        <p className="text-warm/70 text-sm mt-1 italic border-l-2 border-pavo-300 pl-2">
+                          &ldquo;{shot.dialogue}&rdquo;
+                        </p>
+                      )}
                     </div>
-                    <p className="text-gray-700 mt-1">{shot.description}</p>
-                    {shot.dialogue && shot.dialogue !== "-" && (
-                      <p className="text-blue-600 mt-1 italic">&ldquo;{shot.dialogue}&rdquo;</p>
-                    )}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
           )}
@@ -217,24 +258,24 @@ function renderStoryboard(
 
 function renderCharacters(characters?: Character[]) {
   if (!characters?.length) {
-    return <div className="text-center text-gray-400 text-sm py-12">No characters generated yet</div>;
+    return <div className="text-center text-pavo-400 text-sm py-12">No characters generated yet</div>;
   }
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl">
       {characters.map((c, i) => (
-        <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-          <h3 className="font-semibold text-gray-900">{c.name}</h3>
-          <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded mt-1 inline-block">{c.role} | {c.age}</span>
-          <div className="mt-3 space-y-1 text-sm text-gray-600">
-            <p><span className="font-medium">Build:</span> {c.appearance?.build}</p>
-            <p><span className="font-medium">Face:</span> {c.appearance?.face}</p>
-            <p><span className="font-medium">Clothing:</span> {c.appearance?.clothing}</p>
-            <p><span className="font-medium">Voice:</span> {c.voice}</p>
+        <div key={i} className="card p-4">
+          <div className="flex items-center gap-2">
+            <h3 className="font-semibold text-warm text-sm">{c.name}</h3>
+            <span className="text-[11px] text-warm bg-pavo-100 px-2 py-0.5 rounded">{c.role}</span>
+          </div>
+          <div className="mt-3 space-y-1 text-sm text-warm/70">
+            <p><span className="font-medium text-warm/90">Age:</span> {c.age}</p>
+            <p><span className="font-medium text-warm/90">Voice:</span> {c.voice}</p>
           </div>
           {c.personality?.length > 0 && (
             <div className="mt-2 flex flex-wrap gap-1">
               {c.personality.map((p, j) => (
-                <span key={j} className="text-xs bg-gray-100 text-gray-600 rounded px-1.5 py-0.5">{p}</span>
+                <span key={j} className="text-[11px] bg-pavo-100 text-warm/70 rounded px-1.5 py-0.5">{p}</span>
               ))}
             </div>
           )}
@@ -245,17 +286,17 @@ function renderCharacters(characters?: Character[]) {
 }
 
 function renderScenes(scenes?: Scene[]) {
-  if (!scenes?.length) return <div className="text-center text-gray-400 text-sm py-12">No scenes generated yet</div>;
+  if (!scenes?.length) return <div className="text-center text-pavo-400 text-sm py-12">No scenes generated yet</div>;
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl">
       {scenes.map((s, i) => (
-        <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
-          <h3 className="font-semibold text-gray-900">{s.name}</h3>
-          <span className="text-xs text-green-600 bg-green-50 px-2 py-0.5 rounded mt-1 inline-block">{s.timeOfDay}</span>
-          <div className="mt-3 space-y-1 text-sm text-gray-600">
-            <p><span className="font-medium">Style:</span> {s.environment?.style}</p>
-            <p><span className="font-medium">Lighting:</span> {s.lighting?.type} ({s.lighting?.mood})</p>
-            <p><span className="font-medium">Atmosphere:</span> {s.atmosphere}</p>
+        <div key={i} className="card p-4">
+          <h3 className="font-semibold text-warm text-sm">{s.name}</h3>
+          <span className="text-[11px] text-warm bg-pavo-100 px-2 py-0.5 rounded mt-1 inline-block">{s.timeOfDay}</span>
+          <div className="mt-3 space-y-1 text-sm text-warm/70">
+            <p><span className="font-medium text-warm/90">Style:</span> {s.environment?.style}</p>
+            <p><span className="font-medium text-warm/90">Lighting:</span> {s.lighting?.type} ({s.lighting?.mood})</p>
+            <p><span className="font-medium text-warm/90">Atmosphere:</span> {s.atmosphere}</p>
           </div>
         </div>
       ))}
@@ -264,19 +305,19 @@ function renderScenes(scenes?: Scene[]) {
 }
 
 function renderProps(props?: Prop[]) {
-  if (!props?.length) return <div className="text-center text-gray-400 text-sm py-12">No props generated yet</div>;
+  if (!props?.length) return <div className="text-center text-pavo-400 text-sm py-12">No props generated yet</div>;
   return (
-    <div className="grid grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-3xl">
       {props.map((p, i) => (
-        <div key={i} className="bg-white rounded-lg p-4 shadow-sm border border-gray-200">
+        <div key={i} className="card p-4">
           <div className="flex items-center gap-2">
-            <h3 className="font-semibold text-gray-900">{p.name}</h3>
-            <span className="text-xs bg-purple-50 text-purple-600 rounded px-1.5 py-0.5">{p.type}</span>
+            <h3 className="font-semibold text-warm text-sm">{p.name}</h3>
+            <span className="text-[11px] bg-pavo-100 text-warm/70 rounded px-1.5 py-0.5">{p.type}</span>
           </div>
-          <div className="mt-3 space-y-1 text-sm text-gray-600">
-            <p><span className="font-medium">Appearance:</span> {p.appearance}</p>
-            {p.interaction && <p><span className="font-medium">Interaction:</span> {p.interaction}</p>}
-            {p.significance && <p className="text-gray-500 italic mt-2">{p.significance}</p>}
+          <div className="mt-3 space-y-1 text-sm text-warm/70">
+            <p><span className="font-medium text-warm/90">Appearance:</span> {p.appearance}</p>
+            {p.interaction && <p><span className="font-medium text-warm/90">Interaction:</span> {p.interaction}</p>}
+            {p.significance && <p className="text-pavo-400 italic mt-1 text-xs">{p.significance}</p>}
           </div>
         </div>
       ))}

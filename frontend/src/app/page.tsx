@@ -1,97 +1,64 @@
-"use client";
+'use client';
 
-import { useState, useRef, useEffect } from "react";
-import { ChatPanel } from "@/components/ChatPanel";
-import { PreviewPanel } from "@/components/PreviewPanel";
-import { ToastProvider, useToast } from "@/components/Toast";
-import { CardSkeleton, StoryboardSkeleton } from "@/components/Skeleton";
-import { AuthGuard, type AuthState } from "@/components/AuthGuard";
-import { createProject, getProject as apiGetProject, API_BASE, ApiError } from "@/lib/api";
-import type { Project } from "@/types/project";
-
-function HomeContent({ auth }: { auth: AuthState }) {
-  const [project, setProject] = useState<Project | null>(null);
-  const [loading, setLoading] = useState(false);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const { addToast } = useToast();
-
-  const handleCreateProject = async (input: string) => {
-    setLoading(true);
-    try {
-      const data = await createProject(input, auth.token, auth.userId);
-      const projectId = data.projectId;
-      setProject({
-        id: projectId, status: "generating", input,
-        characters: [], scenes: [], props: [], storyboard: null, traceLog: [],
-      });
-      connectSSE(projectId);
-      addToast("success", "Project created! AI agents are working...");
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "Failed to create project";
-      addToast("error", msg);
-      setLoading(false);
-    }
-  };
-
-  const connectSSE = (projectId: string) => {
-    if (eventSourceRef.current) eventSourceRef.current.close();
-    const es = new EventSource(`${API_BASE}/projects/${projectId}/stream?token=${auth.token}`);
-    eventSourceRef.current = es;
-    es.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        if (data.type === "agent:complete") {
-          es.close();
-          fetchProject(projectId);
-          addToast("info", "Generation complete!");
-        }
-      } catch {}
-    };
-    es.onerror = () => {
-      es.close();
-      setTimeout(() => fetchProject(projectId), 1000);
-    };
-  };
-
-  const fetchProject = async (projectId: string) => {
-    try {
-      const data = await apiGetProject(projectId);
-      setProject(data);
-    } catch (err) {
-      const msg = err instanceof ApiError ? err.message : "Failed to fetch project";
-      addToast("error", msg);
-    }
-    setLoading(false);
-  };
-
-  return (
-        <div className="flex h-screen">
-          <ChatPanel onSend={handleCreateProject} loading={loading} traceLog={project?.traceLog || []} />
-          <PreviewPanel project={project} onProjectUpdate={setProject} />
-        </div>
-  );
-}
+import { useState, useEffect } from 'react';
+import { Navbar } from '@/components/layout/Navbar';
+import { Hero } from '@/components/landing/Hero';
+import { FeatureSection } from '@/components/landing/FeatureSection';
+import { AuthModal } from '@/common/AuthModal';
+import { useAuthStore } from '@/stores/authStore';
+import { useProjectStore } from '@/stores/projectStore';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const [auth, setAuth] = useState<AuthState | null>(null);
-  const [checking, setChecking] = useState(true);
+  const { isAuthenticated, checkAuth } = useAuthStore();
+  const { createProject } = useProjectStore();
+  const router = useRouter();
+  const [showAuth, setShowAuth] = useState(false);
 
-  useEffect(() => {
-    const token = localStorage.getItem("pavo_token");
-    const userId = localStorage.getItem("pavo_user_id");
-    const username = localStorage.getItem("pavo_username");
-    if (token && userId && username) {
-      setAuth({ token, userId, username });
-    }
-    setChecking(false);
-  }, []);
-
-  if (checking) return null;
-  if (!auth) return <AuthGuard onAuth={setAuth} />;
+  // Init auth from localStorage
+  useEffect(() => { checkAuth(); }, []);
 
   return (
-    <ToastProvider>
-      <HomeContent auth={auth} />
-    </ToastProvider>
+    <div className="min-h-screen bg-black text-white">
+      <Navbar />
+      <Hero />
+      <FeatureSection />
+
+      {/* Workflow Preview */}
+      <section className="py-24 px-4 border-t border-white/5">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-2xl font-bold text-white mb-8">AI Creation Pipeline</h2>
+          <div className="flex flex-wrap items-center justify-center gap-2 text-sm">
+            {[
+              { icon: '🧠', name: '故事导演' },
+              { icon: '🎭', name: '角色设计师' },
+              { icon: '🌆', name: '场景构建师' },
+              { icon: '🎨', name: '道具师' },
+              { icon: '🎬', name: '分镜导演' },
+              { icon: '🔍', name: '审查' },
+              { icon: '🔧', name: '修复' },
+            ].map((a, i) => (
+              <div key={i} className="flex items-center gap-1">
+                <div className="px-3 py-2 rounded-lg bg-white/5 border border-white/10 text-gray-300 text-xs">
+                  <span className="mr-1">{a.icon}</span>{a.name}
+                </div>
+                {i < 6 && <span className="text-gray-600">→</span>}
+              </div>
+            ))}
+          </div>
+          <p className="text-gray-600 text-xs mt-6">7 AI agents work together to transform your story into a complete animation</p>
+        </div>
+      </section>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-8 px-4">
+        <div className="max-w-6xl mx-auto flex items-center justify-between text-xs text-gray-600">
+          <span>Pavo AI Agent</span>
+          <span>AI-powered storyboard generation</span>
+        </div>
+      </footer>
+
+      <AuthModal isOpen={showAuth} onClose={() => setShowAuth(false)} />
+    </div>
   );
 }

@@ -1,1 +1,71 @@
-﻿@tailwind base;@tailwind components;@tailwind utilities;
+﻿@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cream text-warm font-sans antialiased;
+  }
+
+  ::selection {
+    @apply bg-black/10;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-white rounded-xl border border-pavo-100 shadow-sm;
+  }
+
+  .card-hover {
+    @apply card transition-shadow duration-200 hover:shadow-md;
+  }
+
+  .input-base {
+    @apply w-full px-4 py-2.5 bg-pavo-50 border border-pavo-200 rounded-lg
+           text-warm text-sm placeholder:text-pavo-400
+           focus:outline-none focus:ring-2 focus:ring-pavo-300 focus:border-transparent
+           transition-all duration-150;
+  }
+
+  .btn-primary {
+    @apply px-4 py-2.5 bg-warm text-white text-sm font-medium rounded-lg
+           hover:bg-warm/90 disabled:opacity-40 disabled:cursor-not-allowed
+           transition-all duration-150 flex items-center justify-center gap-2;
+  }
+
+  .btn-ghost {
+    @apply px-3 py-1.5 text-sm text-warm/70 rounded-lg
+           hover:bg-pavo-100 transition-colors duration-150;
+  }
+
+  .tab-btn {
+    @apply px-4 py-2 text-sm rounded-lg transition-all duration-150 font-medium;
+  }
+
+  .tab-btn-active {
+    @apply tab-btn bg-white text-warm shadow-sm;
+  }
+
+  .tab-btn-inactive {
+    @apply tab-btn text-warm/50 hover:text-warm/80 hover:bg-white/50;
+  }
+
+  .sidebar-icon {
+    @apply w-5 h-5;
+  }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-pavo-200 rounded-full;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-pavo-300;
+}
